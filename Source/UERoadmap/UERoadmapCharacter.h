@@ -38,7 +38,7 @@ class AUERoadmapCharacter : public ACharacter
 	UInputAction* MoveAction;
 
 	/** Ammo count */
-	UPROPERTY(EditAnywhere, Category = Ammo,  meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo,  meta = (AllowPrivateAccess = "true"))
 	int32 AmmoCount;
 	
 public:
