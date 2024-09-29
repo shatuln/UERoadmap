@@ -36,6 +36,10 @@ class AUERoadmapCharacter : public ACharacter
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+	/** Ammo count */
+	UPROPERTY(EditAnywhere, Category = Ammo,  meta = (AllowPrivateAccess = "true"))
+	int32 AmmoCount;
 	
 public:
 	AUERoadmapCharacter();
@@ -48,6 +52,9 @@ public:
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
+
+	UFUNCTION()
+	bool OnFireTriggered();
 
 protected:
 	/** Called for movement input */

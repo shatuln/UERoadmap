@@ -68,6 +68,17 @@ void AUERoadmapCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 }
 
 
+bool AUERoadmapCharacter::OnFireTriggered()
+{
+	bool bWasFired = false;
+	if (AmmoCount > 0)
+	{
+		AmmoCount--;
+		bWasFired = true;
+	}
+	return bWasFired;
+}
+
 void AUERoadmapCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
