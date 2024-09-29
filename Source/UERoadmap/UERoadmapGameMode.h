@@ -13,6 +13,8 @@ class AUERoadmapGameMode : public AGameModeBase
 
 public:
 	AUERoadmapGameMode();
+
+	virtual void BeginPlay() override;
 };
 
 
