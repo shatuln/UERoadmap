@@ -16,8 +16,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Switch Components")
 	class UStaticMeshComponent* StaticMeshComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, Category = "Health", meta=(ClampMin=1, ClampMax=100, EditCondition="!bIsImmortal"))
 	int32 HealthPoints;
+
+	UPROPERTY(EditAnywhere, Category = "Health")
+	bool bIsImmortal;
 	
 	// Sets default values for this actor's properties
 	ACubeActor();

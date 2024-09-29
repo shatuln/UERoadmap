@@ -36,16 +36,18 @@ void ACubeActor::Tick(float DeltaTime)
 void ACubeActor::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	AUERoadmapProjectile* Projectile = Cast<AUERoadmapProjectile>(OtherActor);
-	
-	if (Projectile != nullptr && OtherActor != nullptr && OtherActor != this)
+	if (!bIsImmortal)
 	{
-		HealthPoints -= 10;
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Hitted " + FString::FromInt(HealthPoints)));
-
-		if (HealthPoints <= 0)
+		AUERoadmapProjectile* Projectile = Cast<AUERoadmapProjectile>(OtherActor);
+		if (Projectile != nullptr && OtherActor != nullptr && OtherActor != this)
 		{
-			Destroy();
+			HealthPoints -= 10;
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Hitted " + FString::FromInt(HealthPoints)));
+
+			if (HealthPoints <= 0)
+			{
+				Destroy();
+			}
 		}
 	}
 }
