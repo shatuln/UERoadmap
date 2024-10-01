@@ -9,7 +9,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "UERoadmapHUD.h"
 #include "Engine/LocalPlayer.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -60,6 +62,9 @@ void AUERoadmapCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::Look);
+		
+		// Toggle Menu
+        EnhancedInputComponent->BindAction(ToggleMenuAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::ToggleMenu);
 	}
 	else
 	{
@@ -102,5 +107,27 @@ void AUERoadmapCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AUERoadmapCharacter::ToggleMenu(const FInputActionValue& Value)
+{
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	AUERoadmapHUD* HUD = PC->GetHUD<AUERoadmapHUD>();
+
+	if (PC != nullptr && HUD != nullptr)
+	{
+		if (!bIsMenuToggled)
+		{
+			PC->SetInputMode(FInputModeUIOnly());
+			PC->SetShowMouseCursor(true);
+			HUD->ShowMainMenu();
+		}
+		else
+		{
+			PC->SetInputMode(FInputModeGameOnly());
+			PC->SetShowMouseCursor(false);
+			HUD->HideMainMenu();
+		}
 	}
 }
