@@ -65,6 +65,10 @@ void AUERoadmapCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		
 		// Toggle Menu
         EnhancedInputComponent->BindAction(ToggleMenuAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::ToggleMenu);
+        
+        // Throw grenade
+		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Started, this, &AUERoadmapCharacter::ThrowGrenade);
+		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Completed, this, &AUERoadmapCharacter::ThrowGrenadeReleased);
 	}
 	else
 	{
@@ -130,4 +134,31 @@ void AUERoadmapCharacter::ToggleMenu(const FInputActionValue& Value)
 			HUD->HideMainMenu();
 		}
 	}
+}
+
+void AUERoadmapCharacter::ThrowGrenade(const FInputActionValue& Value)
+{
+	if (GrenadeClass)
+	{
+		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+		const FVector SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(FVector(100.0, 0.0, 0.0));
+	
+		//Set Spawn Collision Handling Override
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+		
+		Grenade = GetWorld()->SpawnActor<AUERoadmapGrenade>(GrenadeClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		if (Grenade != nullptr)
+		{
+			//attach
+		}
+		
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Thrown grenade"));
+	}
+}
+
+void AUERoadmapCharacter::ThrowGrenadeReleased(const FInputActionValue& Value)
+{
+	Grenade->OnReleased();
 }

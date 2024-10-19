@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "UERoadmapGrenade.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
@@ -41,6 +42,10 @@ class AUERoadmapCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* ToggleMenuAction;
 
+	/** Throw Grenade Action */
+	UPROPERTY(EditAnywhere, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* ThrowGrenadeAction;
+
 	/** Ammo count */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo,  meta = (AllowPrivateAccess = "true"))
 	int32 AmmoCount;
@@ -53,12 +58,18 @@ public:
 protected:
 	virtual void BeginPlay();
 
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
+	TSubclassOf<class AUERoadmapGrenade> GrenadeClass;
+	
+	UPROPERTY(EditAnywhere, Category = Grenade, meta = (AllowPrivateAccess = "true"))
+	class AUERoadmapGrenade* Grenade;
+	
 public:
 		
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
-
+	
 	UFUNCTION()
 	bool OnFireTriggered();
 
@@ -71,6 +82,9 @@ protected:
 
 	/** Called for ToggleMenu input */
 	void ToggleMenu(const FInputActionValue& Value);
+
+	void ThrowGrenade(const FInputActionValue& Value);
+	void ThrowGrenadeReleased(const FInputActionValue& Value);
 
 protected:
 	// APawn interface
