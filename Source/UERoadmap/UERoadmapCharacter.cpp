@@ -12,6 +12,7 @@
 #include "UERoadmapHUD.h"
 #include "Engine/LocalPlayer.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -142,16 +143,16 @@ void AUERoadmapCharacter::ThrowGrenade(const FInputActionValue& Value)
 	{
 		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-		const FVector SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(FVector(100.0, 0.0, 0.0));
+		const FVector SpawnLocation = PlayerController->PlayerCameraManager->GetCameraLocation() + SpawnRotation.RotateVector(FVector(100.0, 0.0, 0.0));
 	
 		//Set Spawn Collision Handling Override
 		FActorSpawnParameters ActorSpawnParams;
-		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+		//ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 		
 		Grenade = GetWorld()->SpawnActor<AUERoadmapGrenade>(GrenadeClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 		if (Grenade != nullptr)
 		{
-			//attach
+			Grenade->MeshGrenade->AttachToComponent(Mesh1P, FAttachmentTransformRules::KeepWorldTransform);
 		}
 		
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Thrown grenade"));
@@ -160,5 +161,5 @@ void AUERoadmapCharacter::ThrowGrenade(const FInputActionValue& Value)
 
 void AUERoadmapCharacter::ThrowGrenadeReleased(const FInputActionValue& Value)
 {
-	Grenade->OnReleased();
+	Grenade->OnReleased(UKismetMathLibrary::GetForwardVector(GetControlRotation()));
 }

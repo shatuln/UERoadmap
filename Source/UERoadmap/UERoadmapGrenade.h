@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "UERoadmapGrenade.generated.h"
 
@@ -18,11 +19,22 @@ public:
 	UPROPERTY(EditAnywhere, Category=Mesh, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* MeshGrenade;
 
+	UPROPERTY(EditAnywhere)
+	USphereComponent* SphereDamage;
+
+	UPROPERTY(EditAnywhere)
+	float FuseLength;
+
+	UPROPERTY(EditAnywhere)
+	float DamageSphereRadius;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	void Explode();
 	
 public:
-	void OnReleased();
+	void OnReleased(FVector ForwardVector);
 
 };
