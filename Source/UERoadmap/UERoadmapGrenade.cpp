@@ -3,6 +3,9 @@
 
 #include "UERoadmapGrenade.h"
 
+#include "Chaos/DebugDrawQueue.h"
+#include "Kismet/GameplayStatics.h"
+
 // Sets default values
 AUERoadmapGrenade::AUERoadmapGrenade()
 {
@@ -10,7 +13,7 @@ AUERoadmapGrenade::AUERoadmapGrenade()
 	PrimaryActorTick.bCanEverTick = true;
 
 	FuseLength = 5.0f;
-	DamageSphereRadius = 100.0f;
+	DamageSphereRadius = 500.0f;
 
 	MeshGrenade = CreateDefaultSubobject<UStaticMeshComponent>("MeshGrenade");
 	RootComponent = MeshGrenade;
@@ -18,29 +21,54 @@ AUERoadmapGrenade::AUERoadmapGrenade()
 	SphereDamage = CreateDefaultSubobject<USphereComponent>("SphereDamage");
 	SphereDamage->SetSphereRadius(DamageSphereRadius);
 	SphereDamage->SetVisibility(true);
-	SphereDamage->SetupAttachment(RootComponent);
-
+	//SphereDamage->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
 void AUERoadmapGrenade::BeginPlay()
 {
 	Super::BeginPlay();
+	
 	MeshGrenade->SetSimulatePhysics(false);
 	MeshGrenade->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 }
 
+float AUERoadmapGrenade::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	Explode();
+	return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+}
+
 void AUERoadmapGrenade::Explode()
 {
-	TArray<AActor*> Overlaps;
-	SphereDamage->GetOverlappingActors(Overlaps);
-
-	for (AActor* Actor : Overlaps)
+	if (!bIsExploding)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Explode colliding with " + Actor->GetName()));
-	}
+		//TBD: why this is not working????
+		//TArray<AActor*> Overlaps;
+		//SphereDamage->GetOverlappingActors(Overlaps);
 
-	Destroy();
+		bIsExploding = true;
+		TArray<FHitResult> OutHits;
+		FCollisionShape MyColSphere = FCollisionShape::MakeSphere(DamageSphereRadius);
+		bool isHit = GetWorld()->SweepMultiByChannel(OutHits, GetActorLocation(), GetActorLocation(), FQuat::Identity, ECC_PhysicsBody, MyColSphere);
+
+		if (isHit)
+		{
+			for (auto& Hit : OutHits)
+			{
+				UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>((Hit.GetActor())->GetRootComponent());
+				if (MeshComp)
+				{
+					MeshComp->AddRadialImpulse(GetActorLocation(), DamageSphereRadius, 1000.f, ERadialImpulseFalloff::RIF_Constant, true);
+				}
+			}
+		}
+
+		UGameplayStatics::ApplyRadialDamage(GetWorld(),	50.0f, GetActorLocation(), DamageSphereRadius, UDamageType::StaticClass(), TArray<AActor*>(), this, nullptr, false, ECollisionChannel::ECC_Visibility);
+
+		Destroy();
+	}
 }
 
 void AUERoadmapGrenade::OnReleased(FVector ForwardVector)
@@ -55,4 +83,22 @@ void AUERoadmapGrenade::OnReleased(FVector ForwardVector)
 
 	FTimerHandle ExplodeTimerHandle;
 	GetWorldTimerManager().SetTimer(ExplodeTimerHandle, this, &AUERoadmapGrenade::Explode, FuseLength, false);
+}
+
+void AUERoadmapGrenade::PredictPath(FVector ForwardVector)
+{
+	ForwardVector *= 2500.0;
+	ForwardVector.Z += 250.0;
+	
+	FPredictProjectilePathParams PredictParams;
+	PredictParams.StartLocation = GetActorLocation();
+	PredictParams.LaunchVelocity = ForwardVector;
+	PredictParams.MaxSimTime = 2.0f;
+	PredictParams.DrawDebugType = EDrawDebugTrace::ForOneFrame;
+	PredictParams.bTraceWithCollision = true;
+	PredictParams.bTraceComplex = true;
+	PredictParams.SimFrequency = 30.0f;
+
+	FPredictProjectilePathResult PredictResult;
+	UGameplayStatics::PredictProjectilePath(GetWorld(), PredictParams, PredictResult);
 }

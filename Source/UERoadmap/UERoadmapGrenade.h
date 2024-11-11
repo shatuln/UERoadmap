@@ -32,9 +32,15 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
 	void Explode();
 	
 public:
 	void OnReleased(FVector ForwardVector);
 
+	void PredictPath(FVector ForwardVector);
+	
+private:
+	bool bIsExploding = false;
 };

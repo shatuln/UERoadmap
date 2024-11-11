@@ -57,6 +57,8 @@ public:
 
 protected:
 	virtual void BeginPlay();
+	
+	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 	TSubclassOf<class AUERoadmapGrenade> GrenadeClass;
@@ -97,5 +99,7 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+private:
+	bool bIsThrowingGreanade = false;
 };
 
