@@ -23,7 +23,15 @@ namespace ConsoleVars
 		TEXT("cheat.Noclip"),
 		0,
 		TEXT("Noclip cheat code.\n")
-		TEXT("<=0: off\n")
+		TEXT("0: off\n")
+		TEXT(" 1: on\n"),
+		ECVF_Cheat);
+	
+	static TAutoConsoleVariable<bool> CVarAmmoCheat(
+		TEXT("cheat.Ammo"),
+		0,
+		TEXT("Infinite ammo cheat code.\n")
+		TEXT("0: off\n")
 		TEXT(" 1: on\n"),
 		ECVF_Cheat);
 }
@@ -114,6 +122,7 @@ private:
 	bool bIsThrowingGreanade = false;
 
 	bool bIsNoclipEnabled = false;
+	bool bIsInfiniteAmmoEnabled = false;
 
 	void CheckNoclipCheat();
 };

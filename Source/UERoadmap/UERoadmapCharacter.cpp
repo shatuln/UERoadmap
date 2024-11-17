@@ -55,8 +55,10 @@ void AUERoadmapCharacter::Tick(float DeltaTime)
 	{
 		Grenade->PredictPath(UKismetMathLibrary::GetForwardVector(GetControlRotation()));
 	}
-	
+
+	// cheats checks
 	CheckNoclipCheat();
+	bIsInfiniteAmmoEnabled = ConsoleVars::CVarAmmoCheat.GetValueOnAnyThread();
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -97,7 +99,6 @@ void AUERoadmapCharacter::CheckNoclipCheat()
 	{
 		UCharacterMovementComponent* CharacterMovement = GetCharacterMovement();
 		bIsNoclipEnabled = NoclipEnabled;
-		//GetCapsuleComponent()->SetSimulatePhysics(!bIsNoclipEnabled);
 		CharacterMovement->SetMovementMode(bIsNoclipEnabled ? EMovementMode::MOVE_Flying : EMovementMode::MOVE_Walking);
 		SetActorEnableCollision(!bIsNoclipEnabled);
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, bIsNoclipEnabled ? TEXT("Noclip enabled") : TEXT("Noclip disabled"));
@@ -108,9 +109,12 @@ void AUERoadmapCharacter::CheckNoclipCheat()
 bool AUERoadmapCharacter::OnFireTriggered()
 {
 	bool bWasFired = false;
-	if (AmmoCount > 0)
+	if (bIsInfiniteAmmoEnabled || AmmoCount > 0)
 	{
-		AmmoCount--;
+		if (!bIsInfiniteAmmoEnabled)
+		{
+			AmmoCount--;
+		}
 		bWasFired = true;
 	}
 	return bWasFired;
