@@ -17,6 +17,17 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
+namespace ConsoleVars
+{
+	static TAutoConsoleVariable<bool> CVarNoclipCheat(
+		TEXT("cheat.Noclip"),
+		0,
+		TEXT("Noclip cheat code.\n")
+		TEXT("<=0: off\n")
+		TEXT(" 1: on\n"),
+		ECVF_Cheat);
+}
+
 UCLASS(config=Game)
 class AUERoadmapCharacter : public ACharacter
 {
@@ -101,5 +112,9 @@ public:
 
 private:
 	bool bIsThrowingGreanade = false;
+
+	bool bIsNoclipEnabled = false;
+
+	void CheckNoclipCheat();
 };
 

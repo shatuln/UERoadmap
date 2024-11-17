@@ -11,6 +11,7 @@
 #include "InputActionValue.h"
 #include "UERoadmapHUD.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -38,7 +39,6 @@ AUERoadmapCharacter::AUERoadmapCharacter()
 	Mesh1P->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
-
 }
 
 void AUERoadmapCharacter::BeginPlay()
@@ -55,6 +55,8 @@ void AUERoadmapCharacter::Tick(float DeltaTime)
 	{
 		Grenade->PredictPath(UKismetMathLibrary::GetForwardVector(GetControlRotation()));
 	}
+	
+	CheckNoclipCheat();
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -87,6 +89,21 @@ void AUERoadmapCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	}
 }
 
+void AUERoadmapCharacter::CheckNoclipCheat()
+{
+	bool NoclipEnabled = ConsoleVars::CVarNoclipCheat.GetValueOnAnyThread();
+
+	if (NoclipEnabled != bIsNoclipEnabled)
+	{
+		UCharacterMovementComponent* CharacterMovement = GetCharacterMovement();
+		bIsNoclipEnabled = NoclipEnabled;
+		//GetCapsuleComponent()->SetSimulatePhysics(!bIsNoclipEnabled);
+		CharacterMovement->SetMovementMode(bIsNoclipEnabled ? EMovementMode::MOVE_Flying : EMovementMode::MOVE_Walking);
+		SetActorEnableCollision(!bIsNoclipEnabled);
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, bIsNoclipEnabled ? TEXT("Noclip enabled") : TEXT("Noclip disabled"));
+	}
+}
+
 
 bool AUERoadmapCharacter::OnFireTriggered()
 {
@@ -101,13 +118,16 @@ bool AUERoadmapCharacter::OnFireTriggered()
 
 void AUERoadmapCharacter::Move(const FInputActionValue& Value)
 {
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	FVector MovementVector = Value.Get<FVector>();
 
 	if (Controller != nullptr)
 	{
 		// add movement 
-		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+		AddMovementInput(bIsNoclipEnabled ? FirstPersonCameraComponent->GetForwardVector() : GetActorForwardVector(), MovementVector.Y);
+		if (bIsNoclipEnabled)
+		{
+			AddMovementInput(FirstPersonCameraComponent->GetForwardVector(), MovementVector.Z);
+		}
 		AddMovementInput(GetActorRightVector(), MovementVector.X);
 	}
 }
