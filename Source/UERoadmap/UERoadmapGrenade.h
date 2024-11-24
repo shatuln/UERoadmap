@@ -5,12 +5,17 @@
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
+#include "VisualLogger/VisualLoggerDebugSnapshotInterface.h"
 #include "UERoadmapGrenade.generated.h"
 
 UCLASS()
-class UEROADMAP_API AUERoadmapGrenade : public AActor
+class UEROADMAP_API AUERoadmapGrenade : public AActor, public IVisualLoggerDebugSnapshotInterface
 {
 	GENERATED_BODY()
+
+#if ENABLE_VISUAL_LOG
+	virtual void GrabDebugSnapshot(FVisualLogEntry* Snapshot) const override;
+#endif
 	
 public:	
 	// Sets default values for this actor's properties

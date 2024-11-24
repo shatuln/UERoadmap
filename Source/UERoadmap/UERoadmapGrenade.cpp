@@ -6,6 +6,17 @@
 #include "Chaos/DebugDrawQueue.h"
 #include "Kismet/GameplayStatics.h"
 
+#if ENABLE_VISUAL_LOG
+void AUERoadmapGrenade::GrabDebugSnapshot(FVisualLogEntry* Snapshot) const
+{
+	IVisualLoggerDebugSnapshotInterface::GrabDebugSnapshot(Snapshot);
+	const int32 CatIndex = Snapshot->Status.AddZeroed();
+	FVisualLogStatusCategory& PlaceableCategory = Snapshot->Status[CatIndex];
+	PlaceableCategory.Category = TEXT("Grenade Debug");
+	PlaceableCategory.Add(TEXT("Grenade Sphere Damage"), FString::Printf(TEXT("%4.2f"), DamageSphereRadius));
+}
+#endif
+
 // Sets default values
 AUERoadmapGrenade::AUERoadmapGrenade()
 {
@@ -51,6 +62,7 @@ void AUERoadmapGrenade::Explode()
 		bIsExploding = true;
 		TArray<FHitResult> OutHits;
 		FCollisionShape MyColSphere = FCollisionShape::MakeSphere(DamageSphereRadius);
+		UE_VLOG_LOCATION(this, LogTemp, Verbose, GetActorLocation(), DamageSphereRadius, FColor::Green, TEXT("Grenade damage sphere"));
 		bool isHit = GetWorld()->SweepMultiByChannel(OutHits, GetActorLocation(), GetActorLocation(), FQuat::Identity, ECC_PhysicsBody, MyColSphere);
 
 		if (isHit)
@@ -60,6 +72,8 @@ void AUERoadmapGrenade::Explode()
 				UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>((Hit.GetActor())->GetRootComponent());
 				if (MeshComp)
 				{
+					UE_VLOG_ARROW(Hit.GetActor(), LogTemp, Verbose, GetActorLocation(), Hit.ImpactPoint, FColor::Red, TEXT("Grenade hit vector"));
+					UE_VLOG_LOCATION(Hit.GetActor(), LogTemp, Verbose, Hit.ImpactPoint, 5.0, FColor::Red, TEXT("Grenade hit location"));
 					MeshComp->AddRadialImpulse(GetActorLocation(), DamageSphereRadius, 1000.f, ERadialImpulseFalloff::RIF_Constant, true);
 				}
 			}
@@ -83,6 +97,8 @@ void AUERoadmapGrenade::OnReleased(FVector ForwardVector)
 
 	FTimerHandle ExplodeTimerHandle;
 	GetWorldTimerManager().SetTimer(ExplodeTimerHandle, this, &AUERoadmapGrenade::Explode, FuseLength, false);
+	
+	UE_VLOG_ARROW(this, LogTemp, Verbose, GetActorLocation(), FVector::ForwardVector + ForwardVector, FColor::Green, TEXT("Grenade launch vector"));
 }
 
 void AUERoadmapGrenade::PredictPath(FVector ForwardVector)
