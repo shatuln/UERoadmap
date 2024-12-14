@@ -72,14 +72,19 @@ void AUERoadmapGrenade::Explode()
 				UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>((Hit.GetActor())->GetRootComponent());
 				if (MeshComp)
 				{
-					UE_VLOG_ARROW(Hit.GetActor(), LogTemp, Verbose, GetActorLocation(), Hit.ImpactPoint, FColor::Red, TEXT("Grenade hit vector"));
-					UE_VLOG_LOCATION(Hit.GetActor(), LogTemp, Verbose, Hit.ImpactPoint, 5.0, FColor::Red, TEXT("Grenade hit location"));
-					MeshComp->AddRadialImpulse(GetActorLocation(), DamageSphereRadius, 1000.f, ERadialImpulseFalloff::RIF_Constant, true);
+					FHitResult HitResultByLineTrace;
+					GetWorld()->LineTraceSingleByChannel(HitResultByLineTrace, GetActorLocation(), Hit.GetActor()->GetActorLocation(), ECollisionChannel::ECC_PhysicsBody);
+					UE_VLOG_ARROW(Hit.GetActor(), LogTemp, Verbose, GetActorLocation(), HitResultByLineTrace.ImpactPoint, FColor::Red, TEXT("Grenade hit vector"));
+
+					if (Hit.GetActor() == HitResultByLineTrace.GetActor())
+					{
+						MeshComp->AddRadialImpulse(GetActorLocation(), DamageSphereRadius, 1000.f, ERadialImpulseFalloff::RIF_Constant, true);
+					}
 				}
 			}
 		}
 
-		UGameplayStatics::ApplyRadialDamage(GetWorld(),	50.0f, GetActorLocation(), DamageSphereRadius, UDamageType::StaticClass(), TArray<AActor*>(), this, nullptr, false, ECollisionChannel::ECC_Visibility);
+		UGameplayStatics::ApplyRadialDamage(GetWorld(),	50.0f, GetActorLocation(), DamageSphereRadius, UDamageType::StaticClass(), TArray<AActor*>(), this, nullptr, false, ECollisionChannel::ECC_PhysicsBody);
 
 		Destroy();
 	}
