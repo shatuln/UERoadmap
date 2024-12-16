@@ -10,6 +10,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "UERoadmapHUD.h"
+#include "UERoadmapSaveGave.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -84,6 +85,10 @@ void AUERoadmapCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
         // Throw grenade
 		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Started, this, &AUERoadmapCharacter::ThrowGrenade);
 		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Completed, this, &AUERoadmapCharacter::ThrowGrenadeReleased);
+		
+		// Save/Load
+		EnhancedInputComponent->BindAction(SaveGameAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::SaveGameOnInput);
+		EnhancedInputComponent->BindAction(LoadGameAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::LoadGameOnInput);
 	}
 	else
 	{
@@ -198,4 +203,40 @@ void AUERoadmapCharacter::ThrowGrenadeReleased(const FInputActionValue& Value)
 {
 	bIsThrowingGreanade = false;
 	Grenade->OnReleased(UKismetMathLibrary::GetForwardVector(GetControlRotation()));
+}
+
+void AUERoadmapCharacter::SaveGameOnInput(const FInputActionValue& Value)
+{
+	UUERoadmapSaveGave* SaveGameInstance = Cast<UUERoadmapSaveGave>(UGameplayStatics::CreateSaveGameObject(UUERoadmapSaveGave::StaticClass()));
+
+	if (SaveGameInstance)
+	{
+		SaveGameInstance->PlayerLocation = GetActorLocation();
+		SaveGameInstance->PlayerRotation = GetActorRotation();
+		
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
+
+		UE_LOG(LogTemp, Log, TEXT("Game Saved!"));
+	}
+}
+
+void AUERoadmapCharacter::LoadGameOnInput(const FInputActionValue& Value)
+{
+	UUERoadmapSaveGave* LoadGameInstance = Cast<UUERoadmapSaveGave>(UGameplayStatics::LoadGameFromSlot(TEXT("DefaultSaveSlot"), 0));
+
+	if (LoadGameInstance)
+	{
+		SetActorLocation(LoadGameInstance->PlayerLocation);
+		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (PC)
+		{
+			PC->SetControlRotation(LoadGameInstance->PlayerRotation);
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Game Loaded!"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No save game found!"));
+	}
 }

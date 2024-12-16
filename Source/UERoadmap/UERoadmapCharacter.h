@@ -64,6 +64,12 @@ class AUERoadmapCharacter : public ACharacter
 	/** Throw Grenade Action */
 	UPROPERTY(EditAnywhere, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* ThrowGrenadeAction;
+	
+	/** Save/Load Action */
+	UPROPERTY(EditAnywhere, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* SaveGameAction;
+	UPROPERTY(EditAnywhere, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* LoadGameAction;
 
 	/** Ammo count */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo,  meta = (AllowPrivateAccess = "true"))
@@ -106,6 +112,9 @@ protected:
 
 	void ThrowGrenade(const FInputActionValue& Value);
 	void ThrowGrenadeReleased(const FInputActionValue& Value);
+
+	void SaveGameOnInput(const FInputActionValue& Value);
+	void LoadGameOnInput(const FInputActionValue& Value);
 
 protected:
 	// APawn interface
