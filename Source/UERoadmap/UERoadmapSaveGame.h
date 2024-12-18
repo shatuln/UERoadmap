@@ -4,7 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
-#include "UERoadmapSaveGave.generated.h"
+#include "UERoadmapSaveGame.generated.h"
+
+USTRUCT()
+struct FGrenadeSaveData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	float RemainingTime;
+
+	UPROPERTY()
+	FTimerHandle ExplodeTimerHandle;
+};
 
 USTRUCT()
 struct FActorSaveData
@@ -18,18 +31,28 @@ public:
 
 	/* For movable Actors, keep location,rotation,scale. */
 	UPROPERTY()
-	FTransform Transform;
+	FTransform Transform = FTransform();
+	
+	UPROPERTY()
+	FVector LinearImpulse = FVector::ZeroVector;
+
+	UPROPERTY()
+	FVector AngularImpulse = FVector::ZeroVector;
 
 	/* Contains all 'SaveGame' marked variables of the Actor */
 	UPROPERTY()
 	TArray<uint8> ByteData;
+
+	// Grenade save data
+	UPROPERTY()
+	FGrenadeSaveData GrenadeSaveData;
 };
 
 /**
  * 
  */
 UCLASS()
-class UEROADMAP_API UUERoadmapSaveGave : public USaveGame
+class UEROADMAP_API UUERoadmapSaveGame : public USaveGame
 {
 	GENERATED_BODY()
 
@@ -49,6 +72,5 @@ public:
 	UPROPERTY()
 	TArray<FActorSaveData> SavedActors;
 	
-	UUERoadmapSaveGave();
-	//void SaveGame();
+	UUERoadmapSaveGame();
 };

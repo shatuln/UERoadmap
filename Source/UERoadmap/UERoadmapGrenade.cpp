@@ -99,8 +99,7 @@ void AUERoadmapGrenade::OnReleased(FVector ForwardVector)
 	MeshGrenade->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
 	MeshGrenade->SetSimulatePhysics(true);
 	MeshGrenade->AddImpulse(ForwardVector);
-
-	FTimerHandle ExplodeTimerHandle;
+	
 	GetWorldTimerManager().SetTimer(ExplodeTimerHandle, this, &AUERoadmapGrenade::Explode, FuseLength, false);
 	
 	UE_VLOG_ARROW(this, LogTemp, Verbose, GetActorLocation(), FVector::ForwardVector + ForwardVector, FColor::Green, TEXT("Grenade launch vector"));
@@ -122,4 +121,17 @@ void AUERoadmapGrenade::PredictPath(FVector ForwardVector)
 
 	FPredictProjectilePathResult PredictResult;
 	UGameplayStatics::PredictProjectilePath(GetWorld(), PredictParams, PredictResult);
+}
+
+void AUERoadmapGrenade::SaveGameOnGrenade(FActorSaveData& SaveGameActorData)
+{
+	SaveGameActorData.GrenadeSaveData.ExplodeTimerHandle = ExplodeTimerHandle;
+	SaveGameActorData.GrenadeSaveData.RemainingTime = GetWorldTimerManager().GetTimerRemaining(ExplodeTimerHandle);
+}
+
+void AUERoadmapGrenade::LoadGameOnGrenade(const FActorSaveData& LoadGameActorData)
+{
+	GetWorldTimerManager().ClearTimer(ExplodeTimerHandle);
+	ExplodeTimerHandle = LoadGameActorData.GrenadeSaveData.ExplodeTimerHandle;
+	GetWorldTimerManager().SetTimer(ExplodeTimerHandle, this, &AUERoadmapGrenade::Explode, LoadGameActorData.GrenadeSaveData.RemainingTime, false);
 }

@@ -9,8 +9,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "UERoadmapGameMode.h"
 #include "UERoadmapHUD.h"
-#include "UERoadmapSaveGave.h"
+#include "UERoadmapSaveGame.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -207,12 +208,15 @@ void AUERoadmapCharacter::ThrowGrenadeReleased(const FInputActionValue& Value)
 
 void AUERoadmapCharacter::SaveGameOnInput(const FInputActionValue& Value)
 {
-	UUERoadmapSaveGave* SaveGameInstance = Cast<UUERoadmapSaveGave>(UGameplayStatics::CreateSaveGameObject(UUERoadmapSaveGave::StaticClass()));
+	UUERoadmapSaveGame* SaveGameInstance = Cast<UUERoadmapSaveGame>(UGameplayStatics::CreateSaveGameObject(UUERoadmapSaveGame::StaticClass()));
 
 	if (SaveGameInstance)
 	{
 		SaveGameInstance->PlayerLocation = GetActorLocation();
 		SaveGameInstance->PlayerRotation = GetActorRotation();
+
+		AUERoadmapGameMode* GameMode = Cast<AUERoadmapGameMode>(GetWorld()->GetAuthGameMode());
+		GameMode->SaveGameInGameMode(SaveGameInstance);
 		
 		UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
 
@@ -222,7 +226,7 @@ void AUERoadmapCharacter::SaveGameOnInput(const FInputActionValue& Value)
 
 void AUERoadmapCharacter::LoadGameOnInput(const FInputActionValue& Value)
 {
-	UUERoadmapSaveGave* LoadGameInstance = Cast<UUERoadmapSaveGave>(UGameplayStatics::LoadGameFromSlot(TEXT("DefaultSaveSlot"), 0));
+	UUERoadmapSaveGame* LoadGameInstance = Cast<UUERoadmapSaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("DefaultSaveSlot"), 0));
 
 	if (LoadGameInstance)
 	{
@@ -232,6 +236,9 @@ void AUERoadmapCharacter::LoadGameOnInput(const FInputActionValue& Value)
 		{
 			PC->SetControlRotation(LoadGameInstance->PlayerRotation);
 		}
+		
+		AUERoadmapGameMode* GameMode = Cast<AUERoadmapGameMode>(GetWorld()->GetAuthGameMode());
+		GameMode->LoadGameInGameMode(LoadGameInstance);
 
 		UE_LOG(LogTemp, Log, TEXT("Game Loaded!"));
 	}

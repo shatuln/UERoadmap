@@ -6,6 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "VisualLogger/VisualLoggerDebugSnapshotInterface.h"
+#include "UERoadmapSaveGame.h"
 #include "UERoadmapGrenade.generated.h"
 
 UCLASS()
@@ -33,6 +34,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	float DamageSphereRadius;
 
+	UPROPERTY(EditAnywhere)
+	FTimerHandle ExplodeTimerHandle;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -45,6 +49,9 @@ public:
 	void OnReleased(FVector ForwardVector);
 
 	void PredictPath(FVector ForwardVector);
+
+	void SaveGameOnGrenade(FActorSaveData& SaveGameActorData);
+	void LoadGameOnGrenade(const FActorSaveData& LoadGameActorData);
 	
 private:
 	bool bIsExploding = false;

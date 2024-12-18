@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "UERoadmapSaveGame.h"
 #include "UERoadmapGameMode.generated.h"
 
 UCLASS(minimalapi)
@@ -15,6 +16,9 @@ public:
 	AUERoadmapGameMode();
 
 	virtual void BeginPlay() override;
+
+	void SaveGameInGameMode(UUERoadmapSaveGame* SaveGameInstance);
+	void LoadGameInGameMode(UUERoadmapSaveGame* LoadGameInstance);
 };
 
 

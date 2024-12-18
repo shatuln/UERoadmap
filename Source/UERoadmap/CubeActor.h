@@ -16,7 +16,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Switch Components")
 	class UStaticMeshComponent* StaticMeshComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Health", meta=(ClampMin=1, ClampMax=100, EditCondition="!bIsImmortal"))
+	UPROPERTY(EditAnywhere, Category = "Health", meta=(ClampMin=1, ClampMax=100, EditCondition="!bIsImmortal"), SaveGame)
 	int32 HealthPoints;
 
 	UPROPERTY(EditAnywhere, Category = "Health")
