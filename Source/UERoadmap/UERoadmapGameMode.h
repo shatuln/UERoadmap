@@ -19,6 +19,10 @@ public:
 
 	void SaveGameInGameMode(UUERoadmapSaveGame* SaveGameInstance);
 	void LoadGameInGameMode(UUERoadmapSaveGame* LoadGameInstance);
+	
+private:
+	AActor* FindActorByName(const FString& ActorName) const;
+	void ClearSavedActors();
 };
 
 

@@ -25,9 +25,8 @@ struct FActorSaveData
 	GENERATED_BODY()
 
 public:
-	/* Identifier for which Actor this belongs to */
 	UPROPERTY()
-	FName ActorName;
+	TSubclassOf<AActor> ActorClass;
 
 	/* For movable Actors, keep location,rotation,scale. */
 	UPROPERTY()
@@ -70,7 +69,7 @@ public:
 	FRotator PlayerRotation;
 
 	UPROPERTY()
-	TArray<FActorSaveData> SavedActors;
+	TMap<FString, FActorSaveData> SavedActors;
 	
 	UUERoadmapSaveGame();
 };

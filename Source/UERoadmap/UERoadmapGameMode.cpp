@@ -48,9 +48,11 @@ void AUERoadmapGameMode::SaveGameInGameMode(UUERoadmapSaveGame* SaveGameInstance
 				{
 					continue;
 				}
+
+				FString ActorName = Actor->GetName();
 				
 				FActorSaveData ActorData;
-				ActorData.ActorName = Actor->GetFName();
+				ActorData.ActorClass = Actor->GetClass();
 				ActorData.Transform = Actor->GetActorTransform();
 
 				ActorData.LinearImpulse = MeshComp->GetMass() * MeshComp->GetPhysicsLinearVelocity();
@@ -76,7 +78,7 @@ void AUERoadmapGameMode::SaveGameInGameMode(UUERoadmapSaveGame* SaveGameInstance
 				// Converts Actor's SaveGame UPROPERTIES into binary array
 				Actor->Serialize(Ar);
 
-				SaveGameInstance->SavedActors.Add(ActorData);
+				SaveGameInstance->SavedActors.Add(ActorName, ActorData);
 			}
 		}
 	}
@@ -86,47 +88,97 @@ void AUERoadmapGameMode::LoadGameInGameMode(UUERoadmapSaveGame* LoadGameInstance
 {
 	if (LoadGameInstance)
 	{
-		for (const FActorSaveData& ActorData : LoadGameInstance->SavedActors)
+		ClearSavedActors();
+		for (const TPair<FString, FActorSaveData>& SavedActor : LoadGameInstance->SavedActors)
 		{
-			for (FActorIterator It(GetWorld()); It; ++It)
+			FString ActorName = SavedActor.Key;
+			FActorSaveData ActorData = SavedActor.Value;
+			
+			AActor* ExistingActor = FindActorByName(ActorName);
+			if (!ExistingActor)
 			{
-				AActor* Actor = *It;
-				if (Actor && Actor->GetName() == ActorData.ActorName)
+				FActorSpawnParameters SpawnParams;
+				
+				SpawnParams.Name = FName(*ActorName);
+				SpawnParams.NameMode = FActorSpawnParameters::ESpawnActorNameMode::Requested;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				if (ActorData.ActorClass && ActorData.ActorClass->IsValidLowLevel())
 				{
-					Actor->SetActorTransform(ActorData.Transform);
-
-					UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Actor->GetRootComponent());
-
-					if (MeshComp)
-					{
-						MeshComp->SetPhysicsLinearVelocity(ActorData.LinearImpulse / MeshComp->GetMass());
-						MeshComp->SetPhysicsAngularVelocityInDegrees(ActorData.AngularImpulse);
-					}
-
-					if (Actor->GetClass()->IsChildOf(AUERoadmapGrenade::StaticClass()))
-					{
-						AUERoadmapGrenade* Grenade = Cast<AUERoadmapGrenade>(Actor);
-						if (Grenade)
-						{
-							Grenade->LoadGameOnGrenade(ActorData);
-						}
-					}
-
-					FMemoryReader MemReader(ActorData.ByteData);
-
-					FObjectAndNameAsStringProxyArchive Ar(MemReader, true);
-					Ar.ArIsSaveGame = true;
-					// Convert binary array back into actor's variables
-					Actor->Serialize(Ar);
-
-					break;
+					ExistingActor = GetWorld()->SpawnActor<AActor>(ActorData.ActorClass, ActorData.Transform, SpawnParams);
+					ExistingActor->Tags.Add(FName(TEXT("SpawnedActorWithUniqueName")));
+				}
+				if (ExistingActor)
+				{
+					UE_LOG(LogTemp, Log, TEXT("Spawned Actor: %s"), *ActorName);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Failed to spawn Actor: %s"), *ActorName);
 				}
 			}
+			
+			if (ExistingActor)
+			{
+				ExistingActor->SetActorTransform(ActorData.Transform);
+
+				UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(ExistingActor->GetRootComponent());
+
+				if (ExistingActor->GetClass()->IsChildOf(AUERoadmapGrenade::StaticClass()))
+				{
+					AUERoadmapGrenade* Grenade = Cast<AUERoadmapGrenade>(ExistingActor);
+					if (Grenade)
+					{
+						Grenade->LoadGameOnGrenade(ActorData);
+					}
+				}
+				
+				if (MeshComp && MeshComp->IsSimulatingPhysics())
+				{
+					MeshComp->SetPhysicsLinearVelocity(ActorData.LinearImpulse / MeshComp->GetMass());
+					MeshComp->SetPhysicsAngularVelocityInDegrees(ActorData.AngularImpulse);
+				}
+
+				FMemoryReader MemReader(ActorData.ByteData);
+
+				FObjectAndNameAsStringProxyArchive Ar(MemReader, true);
+				Ar.ArIsSaveGame = true;
+				// Convert binary array back into actor's variables
+				ExistingActor->Serialize(Ar);
+			}
+			
 		}
 		UE_LOG(LogTemp, Log, TEXT("Game Loaded: %d actors"), LoadGameInstance->SavedActors.Num());
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No SaveGame found!"));
+	}
+}
+
+AActor* AUERoadmapGameMode::FindActorByName(const FString& ActorName) const
+{
+	for (TActorIterator<AActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		if (ActorItr->GetName() == ActorName)
+		{
+			return *ActorItr;
+		}
+	}
+	return nullptr;
+}
+
+void AUERoadmapGameMode::ClearSavedActors()
+{
+	TArray<AActor*> ActorsToDelete;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName(TEXT("SpawnedActorWithUniqueName")), ActorsToDelete);
+
+	for (AActor* Actor : ActorsToDelete)
+	{
+		if (Actor)
+		{
+			UE_LOG(LogTemp, Log, TEXT("Destroying actor: %s"), *Actor->GetName());
+			Actor->Destroy();
+		}
 	}
 }

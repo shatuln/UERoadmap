@@ -131,6 +131,9 @@ void AUERoadmapGrenade::SaveGameOnGrenade(FActorSaveData& SaveGameActorData)
 
 void AUERoadmapGrenade::LoadGameOnGrenade(const FActorSaveData& LoadGameActorData)
 {
+	MeshGrenade->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+	MeshGrenade->SetSimulatePhysics(true);
+	
 	GetWorldTimerManager().ClearTimer(ExplodeTimerHandle);
 	ExplodeTimerHandle = LoadGameActorData.GrenadeSaveData.ExplodeTimerHandle;
 	GetWorldTimerManager().SetTimer(ExplodeTimerHandle, this, &AUERoadmapGrenade::Explode, LoadGameActorData.GrenadeSaveData.RemainingTime, false);
