@@ -8,6 +8,7 @@
 // Sets default values
 ACubeActor::ACubeActor()
 {
+	State = Invalid;
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	StaticMeshComponent->SetupAttachment(RootComponent);
 
@@ -40,6 +41,14 @@ float ACubeActor::TakeDamage(float Damage, FDamageEvent const& DamageEvent, ACon
 	return actualDamage;
 }
 
+void ACubeActor::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	SetCubeState();
+	LoadDataTable();
+}
+
 // Called every frame
 void ACubeActor::Tick(float DeltaTime)
 {
@@ -58,6 +67,82 @@ bool ACubeActor::IsDead()
 	return isDead;
 }
 
+void ACubeActor::LoadDataTable()
+{
+    static const FString ContextString(TEXT("DataTableContext"));
+	
+    UDataTable* DataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/CubeActorsData.CubeActorsData"));
+
+    if (DataTable)
+    {
+        FName RowName;
+    	switch (State)
+    	{
+    	case Immortal:
+    		RowName = FName("Immortal");
+    		break;
+    	case FullHP:
+    		RowName = FName("FullHP");
+    		break;
+    	case HalfHP:
+    		RowName = FName("HalfHP");
+    		break;
+    	case LowHP:
+    		RowName = FName("LowHP");
+    		break;
+    	default:
+    		UE_LOG(LogTemp, Error, TEXT("Incorrect state handled for Cube data table"));
+    		break;
+    	}
+    	
+        FCubeActorData* Row = DataTable->FindRow<FCubeActorData>(RowName, ContextString);
+        if (Row)
+        {
+        	CubeMaterial = Row->CubeMaterial;
+        	StaticMeshComponent->SetWorldScale3D(FVector(Row->ScalePercentage, Row->ScalePercentage, Row->ScalePercentage));
+        	
+        	UMaterialInterface* NewMaterial = LoadObject<UMaterialInterface>(nullptr, *CubeMaterial);
+        	if (NewMaterial)
+        	{
+        		StaticMeshComponent->SetMaterial(0, NewMaterial);
+        		StaticMeshComponent->MarkRenderStateDirty();
+        	}
+        	else
+        	{
+        		UE_LOG(LogTemp, Error, TEXT("Failed to load material %s"), *CubeMaterial);
+        	}
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Row not found in DataTable!"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("DataTable not found!"));
+    }
+}
+
+void ACubeActor::SetCubeState()
+{
+	if (bIsImmortal)
+	{
+		State = Immortal;
+	}
+	else if (HealthPoints == 100)
+	{
+		State = FullHP;
+	}
+	else if (HealthPoints >= 50)
+	{
+		State = HalfHP;
+	}
+	else if (HealthPoints < 50)
+	{
+		State = LowHP;
+	}
+}
+
 void ACubeActor::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                        FVector NormalImpulse, const FHitResult& Hit)
 {
@@ -68,7 +153,15 @@ void ACubeActor::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimit
 		{
 			HealthPoints -= 10;
 			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Hitted " + FString::FromInt(HealthPoints)));
-			IsDead();
+			if (!IsDead())
+			{
+				CubeState CurrentState = State;
+				SetCubeState();
+				if (CurrentState != State)
+				{
+					LoadDataTable();
+				}
+			}
 		}
 	}
 }

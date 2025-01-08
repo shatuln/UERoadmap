@@ -6,6 +6,25 @@
 #include "GameFramework/Actor.h"
 #include "CubeActor.generated.h"
 
+USTRUCT(BlueprintType)
+struct FCubeActorData : public FTableRowBase
+	{
+		GENERATED_USTRUCT_BODY()
+
+	public:
+
+		FCubeActorData()
+		: ScalePercentage(1.0f)
+		, CubeMaterial("")
+		{}
+
+		UPROPERTY(EditAnywhere)
+		float ScalePercentage;
+
+		UPROPERTY(EditAnywhere)
+		FString CubeMaterial;
+	};
+
 UCLASS()
 class UEROADMAP_API ACubeActor : public AActor
 {
@@ -21,6 +40,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Health")
 	bool bIsImmortal;
+
+	UPROPERTY(VisibleAnywhere, Category = "Visual")
+	FString CubeMaterial;
 	
 	// Sets default values for this actor's properties
 	ACubeActor();
@@ -33,12 +55,29 @@ protected:
 	virtual void BeginPlay() override;
 	
 	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	enum CubeState
+	{
+		Invalid = -1,
+		Immortal,
+		FullHP,
+		HalfHP,
+		LowHP
+	};
+	
 	UFUNCTION()
 	bool IsDead();
+
+	void LoadDataTable();
+	void SetCubeState();
+
+	FTransform DefaultTransform;
+	CubeState State;
 };
