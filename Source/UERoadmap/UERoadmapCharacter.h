@@ -56,10 +56,6 @@ class AUERoadmapCharacter : public ACharacter
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
-	
-	/** Toggle Menu Action */
-	UPROPERTY(EditAnywhere, Category=Input, meta=(AllowPrivateAccess = "true"))
-	UInputAction* ToggleMenuAction;
 
 	/** Throw Grenade Action */
 	UPROPERTY(EditAnywhere, Category=Input, meta=(AllowPrivateAccess = "true"))
@@ -74,8 +70,6 @@ class AUERoadmapCharacter : public ACharacter
 	/** Ammo count */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo,  meta = (AllowPrivateAccess = "true"))
 	int32 AmmoCount;
-
-	bool bIsMenuToggled = false;
 	
 public:
 	AUERoadmapCharacter();
@@ -106,9 +100,6 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-
-	/** Called for ToggleMenu input */
-	void ToggleMenu(const FInputActionValue& Value);
 
 	void ThrowGrenade(const FInputActionValue& Value);
 	void ThrowGrenadeReleased(const FInputActionValue& Value);

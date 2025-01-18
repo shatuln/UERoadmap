@@ -79,9 +79,6 @@ void AUERoadmapCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::Look);
-		
-		// Toggle Menu
-        EnhancedInputComponent->BindAction(ToggleMenuAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::ToggleMenu);
         
         // Throw grenade
 		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Started, this, &AUERoadmapCharacter::ThrowGrenade);
@@ -152,28 +149,6 @@ void AUERoadmapCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
-	}
-}
-
-void AUERoadmapCharacter::ToggleMenu(const FInputActionValue& Value)
-{
-	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	AUERoadmapHUD* HUD = PC->GetHUD<AUERoadmapHUD>();
-
-	if (PC != nullptr && HUD != nullptr)
-	{
-		if (!bIsMenuToggled)
-		{
-			PC->SetInputMode(FInputModeUIOnly());
-			PC->SetShowMouseCursor(true);
-			HUD->ShowMainMenu();
-		}
-		else
-		{
-			PC->SetInputMode(FInputModeGameOnly());
-			PC->SetShowMouseCursor(false);
-			HUD->HideMainMenu();
-		}
 	}
 }
 

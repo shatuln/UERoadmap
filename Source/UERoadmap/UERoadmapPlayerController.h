@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputAction.h"
 #include "UERoadmapPlayerController.generated.h"
 
 class UInputMappingContext;
@@ -15,6 +17,15 @@ UCLASS()
 class UEROADMAP_API AUERoadmapPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+
+	void ToggleMenu();
+
+	bool bIsMenuToggled;
+
+public:
+	/** Toggle Menu Action */
+	UPROPERTY(EditAnywhere, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* ToggleMenuAction;
 	
 protected:
 
@@ -22,10 +33,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputMappingContext* InputMappingContext;
 
-	// Begin Actor interface
-protected:
+	UFUNCTION()
+	void SetupInputComponent() override;
 
 	virtual void BeginPlay() override;
-
-	// End Actor interface
 };
