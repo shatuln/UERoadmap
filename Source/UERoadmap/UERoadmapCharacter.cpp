@@ -12,6 +12,7 @@
 #include "UERoadmapGameMode.h"
 #include "UERoadmapHUD.h"
 #include "UERoadmapSaveGame.h"
+#include "UERoadmap_GA_GravityGun.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -41,6 +42,8 @@ AUERoadmapCharacter::AUERoadmapCharacter()
 	Mesh1P->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+
+	//AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 }
 
 void AUERoadmapCharacter::BeginPlay()
@@ -87,6 +90,9 @@ void AUERoadmapCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		// Save/Load
 		EnhancedInputComponent->BindAction(SaveGameAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::SaveGameOnInput);
 		EnhancedInputComponent->BindAction(LoadGameAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::LoadGameOnInput);
+
+		// Alternative fire
+		//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::ActivateGravityGun);
 	}
 	else
 	{
@@ -224,3 +230,11 @@ void AUERoadmapCharacter::LoadGameOnInput(const FInputActionValue& Value)
 		UE_LOG(LogTemp, Warning, TEXT("No save game found!"));
 	}
 }
+
+/*void AUERoadmapCharacter::ActivateGravityGun(const FInputActionValue& Value)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->TryActivateAbilityByClass(UUERoadmap_GA_GravityGun::StaticClass());
+	}
+}*/
