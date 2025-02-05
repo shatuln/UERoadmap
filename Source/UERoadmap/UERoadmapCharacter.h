@@ -6,6 +6,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "AbilitySystemInterface.h"
+#include "AbilitySystemComponent.h"
 #include "UERoadmapCharacter.generated.h"
 
 class UInputComponent;
@@ -14,6 +16,7 @@ class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 struct FInputActionValue;
+class UAbilitySystemComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -37,7 +40,7 @@ namespace ConsoleVars
 }
 
 UCLASS(config=Game)
-class AUERoadmapCharacter : public ACharacter
+class AUERoadmapCharacter : public ACharacter//, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -66,6 +69,10 @@ class AUERoadmapCharacter : public ACharacter
 	UInputAction* SaveGameAction;
 	UPROPERTY(EditAnywhere, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* LoadGameAction;
+
+	/** Alternative fire Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* AlternativeFireAction;
 
 	/** Ammo count */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo,  meta = (AllowPrivateAccess = "true"))
@@ -107,10 +114,14 @@ protected:
 	void SaveGameOnInput(const FInputActionValue& Value);
 	void LoadGameOnInput(const FInputActionValue& Value);
 
-protected:
+	void ActivateGravityGun(const FInputActionValue& Value);
+	
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
+	
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
+    //TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 public:
 	/** Returns Mesh1P subobject **/
