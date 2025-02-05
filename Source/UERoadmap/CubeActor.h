@@ -41,7 +41,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Health")
 	bool bIsImmortal;
 
-	UPROPERTY(VisibleAnywhere, Category = "Visual")
+	UPROPERTY(VisibleAnywhere, Category = "Visual", SaveGame)
 	FString CubeMaterial;
 	
 	// Sets default values for this actor's properties

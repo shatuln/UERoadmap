@@ -100,9 +100,9 @@ void AUERoadmapCharacter::CheckNoclipCheat()
 
 	if (NoclipEnabled != bIsNoclipEnabled)
 	{
-		UCharacterMovementComponent* CharacterMovement = GetCharacterMovement();
+		UCharacterMovementComponent* MyCharacterMovement = GetCharacterMovement();
 		bIsNoclipEnabled = NoclipEnabled;
-		CharacterMovement->SetMovementMode(bIsNoclipEnabled ? EMovementMode::MOVE_Flying : EMovementMode::MOVE_Walking);
+		MyCharacterMovement->SetMovementMode(bIsNoclipEnabled ? EMovementMode::MOVE_Flying : EMovementMode::MOVE_Walking);
 		SetActorEnableCollision(!bIsNoclipEnabled);
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, bIsNoclipEnabled ? TEXT("Noclip enabled") : TEXT("Noclip disabled"));
 	}
@@ -189,6 +189,7 @@ void AUERoadmapCharacter::SaveGameOnInput(const FInputActionValue& Value)
 	{
 		SaveGameInstance->PlayerLocation = GetActorLocation();
 		SaveGameInstance->PlayerRotation = GetActorRotation();
+		SaveGameInstance->PlayerAmmoCount = AmmoCount;
 
 		AUERoadmapGameMode* GameMode = Cast<AUERoadmapGameMode>(GetWorld()->GetAuthGameMode());
 		GameMode->SaveGameInGameMode(SaveGameInstance);
@@ -205,6 +206,7 @@ void AUERoadmapCharacter::LoadGameOnInput(const FInputActionValue& Value)
 
 	if (LoadGameInstance)
 	{
+		AmmoCount = LoadGameInstance->PlayerAmmoCount;
 		SetActorLocation(LoadGameInstance->PlayerLocation);
 		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		if (PC)
