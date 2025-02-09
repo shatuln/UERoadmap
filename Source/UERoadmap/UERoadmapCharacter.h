@@ -40,7 +40,7 @@ namespace ConsoleVars
 }
 
 UCLASS(config=Game)
-class AUERoadmapCharacter : public ACharacter//, public IAbilitySystemInterface
+class AUERoadmapCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -86,11 +86,16 @@ protected:
 	
 	virtual void Tick(float DeltaTime) override;
 
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
 	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 	TSubclassOf<class AUERoadmapGrenade> GrenadeClass;
 	
 	UPROPERTY(EditAnywhere, Category = Grenade, meta = (AllowPrivateAccess = "true"))
 	class AUERoadmapGrenade* Grenade;
+
+	//UPROPERTY(EditDefaultsOnly, Category = Ability, meta = (AllowPrivateAccess = "true"))
+	//TSubclassOf<class UUERoadmap_GA_GravityGun> GravityGunAbilityClass;
 	
 public:
 		
@@ -120,8 +125,8 @@ protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
 	
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
-    //TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
+    TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 public:
 	/** Returns Mesh1P subobject **/

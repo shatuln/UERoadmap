@@ -65,7 +65,8 @@ AActor* UUERoadmap_GA_GravityGun::FindTargetActor()
 }
 
 void UUERoadmap_GA_GravityGun::PickupObject(AActor* Target)
-{if (!Target) return;
+{
+	if (!Target) return;
 
 	HeldActor = Target;
 
