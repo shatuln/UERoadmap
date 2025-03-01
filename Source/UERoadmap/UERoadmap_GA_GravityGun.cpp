@@ -5,6 +5,8 @@
 
 #include "GameFramework/Character.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
+#include "UERoadmapCharacter.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UUERoadmap_GA_GravityGun::UUERoadmap_GA_GravityGun()
 {
@@ -15,36 +17,31 @@ bool UUERoadmap_GA_GravityGun::CanActivateAbility(const FGameplayAbilitySpecHand
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
 	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
 {
-	return true;
+	return FindTargetActor() != nullptr;
 }
 
 void UUERoadmap_GA_GravityGun::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
-	if (HeldActor) 
+	AActor* Target = FindTargetActor();
+	if (Target) 
 	{
-		ThrowObject();
+		PickupObject(Target);
 	}
-	else 
-	{
-		AActor* Target = FindTargetActor();
-		if (Target) 
-		{
-			PickupObject(Target);
-		}
-	}
+
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
 
 void UUERoadmap_GA_GravityGun::CancelAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool bReplicateCancelAbility)
 {
-	DropObject();
+	ThrowObject();
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
-AActor* UUERoadmap_GA_GravityGun::FindTargetActor()
+AActor* UUERoadmap_GA_GravityGun::FindTargetActor() const
 {
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
 	if (!OwnerCharacter) return nullptr;
@@ -58,7 +55,10 @@ AActor* UUERoadmap_GA_GravityGun::FindTargetActor()
 
 	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_PhysicsBody, Params))
 	{
-		return Hit.GetActor();
+		if (Hit.GetComponent()->IsSimulatingPhysics())
+		{
+			return Hit.GetActor();
+		}
 	}
 
 	return nullptr;
@@ -68,43 +68,27 @@ void UUERoadmap_GA_GravityGun::PickupObject(AActor* Target)
 {
 	if (!Target) return;
 
-	HeldActor = Target;
-
-	// Добавляем Physics Handle к владельцу
-	if (!PhysicsHandle)
-	{
-		PhysicsHandle = NewObject<UPhysicsHandleComponent>(GetAvatarActorFromActorInfo());
-		PhysicsHandle->RegisterComponent();
-	}
-
+	AUERoadmapCharacter* OwnerCharacter = Cast<AUERoadmapCharacter>(GetAvatarActorFromActorInfo());
 	UPrimitiveComponent* TargetComponent = Cast<UPrimitiveComponent>(Target->GetRootComponent());
-	if (TargetComponent)
+	if (TargetComponent && OwnerCharacter->PhysicsHandle)
 	{
-		TargetComponent->SetSimulatePhysics(true);
-		PhysicsHandle->GrabComponentAtLocationWithRotation(TargetComponent, NAME_None, Target->GetActorLocation(), Target->GetActorRotation());
-	}
-}
-
-void UUERoadmap_GA_GravityGun::DropObject()
-{
-	if (PhysicsHandle && HeldActor)
-	{
-		PhysicsHandle->ReleaseComponent();
-		HeldActor = nullptr;
+		HeldActor = Target;
+		OwnerCharacter->PhysicsHandle->GrabComponentAtLocationWithRotation(TargetComponent, NAME_None, TargetComponent->GetComponentLocation(), TargetComponent->GetComponentRotation());
 	}
 }
 
 void UUERoadmap_GA_GravityGun::ThrowObject()
 {
-	if (PhysicsHandle && HeldActor)
+	if (HeldActor)
 	{
+		AUERoadmapCharacter* OwnerCharacter = Cast<AUERoadmapCharacter>(GetAvatarActorFromActorInfo());
 		UPrimitiveComponent* TargetComponent = Cast<UPrimitiveComponent>(HeldActor->GetRootComponent());
 		if (TargetComponent)
 		{
-			TargetComponent->AddImpulse(GetAvatarActorFromActorInfo()->GetActorForwardVector() * ThrowForce, NAME_None, true);
+			OwnerCharacter->PhysicsHandle->ReleaseComponent();
+			HeldActor = nullptr;
+			TargetComponent->AddImpulse(UKismetMathLibrary::GetForwardVector(OwnerCharacter->GetControlRotation()) * ThrowForce, NAME_None, true);
 		}
-
-		DropObject();
 	}
 }
 

@@ -29,23 +29,19 @@ public:
 							   const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
 
 protected:
-	AActor* FindTargetActor();
+	AActor* FindTargetActor() const;
 	
 	void PickupObject(AActor* Target);
-
-	void DropObject();
 	
 	void ThrowObject();
 
 private:
-	UPROPERTY()
-	UPhysicsHandleComponent* PhysicsHandle;
 
 	UPROPERTY()
 	AActor* HeldActor;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Gravity Gun")
-	float MaxPickupDistance = 1000.0f;
+	float MaxPickupDistance = 500.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Gravity Gun")
 	float ThrowForce = 2000.0f;

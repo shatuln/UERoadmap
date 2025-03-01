@@ -8,6 +8,7 @@
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
+#include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "UERoadmapCharacter.generated.h"
 
 class UInputComponent;
@@ -17,6 +18,7 @@ class UInputAction;
 class UInputMappingContext;
 struct FInputActionValue;
 class UAbilitySystemComponent;
+class UPhysicsHandleComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -80,6 +82,9 @@ class AUERoadmapCharacter : public ACharacter, public IAbilitySystemInterface
 	
 public:
 	AUERoadmapCharacter();
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	UPhysicsHandleComponent* PhysicsHandle;
 
 protected:
 	virtual void BeginPlay();
