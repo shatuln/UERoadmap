@@ -17,7 +17,7 @@ bool UUERoadmap_GA_GravityGun::CanActivateAbility(const FGameplayAbilitySpecHand
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
 	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
 {
-	return FindTargetActor() != nullptr;
+	return FindTargetActor() != nullptr && ActorInfo->AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Weapon.Held"));
 }
 
 void UUERoadmap_GA_GravityGun::ActivateAbility(const FGameplayAbilitySpecHandle Handle,

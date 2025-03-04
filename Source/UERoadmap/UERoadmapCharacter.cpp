@@ -135,7 +135,7 @@ void AUERoadmapCharacter::CheckNoclipCheat()
 bool AUERoadmapCharacter::OnFireTriggered()
 {
 	bool bWasFired = false;
-	if (bIsInfiniteAmmoEnabled || AmmoCount > 0)
+	if (!PhysicsHandle->GrabbedComponent && (bIsInfiniteAmmoEnabled || AmmoCount > 0))
 	{
 		if (!bIsInfiniteAmmoEnabled)
 		{
@@ -144,6 +144,15 @@ bool AUERoadmapCharacter::OnFireTriggered()
 		bWasFired = true;
 	}
 	return bWasFired;
+}
+
+void AUERoadmapCharacter::OnRiflePickedUp()
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag("Weapon.Held"));
+		AbilitySystemComponent->ForceReplication();
+	}
 }
 
 void AUERoadmapCharacter::Move(const FInputActionValue& Value)
