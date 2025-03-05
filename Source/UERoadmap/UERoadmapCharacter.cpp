@@ -43,13 +43,17 @@ AUERoadmapCharacter::AUERoadmapCharacter()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
-	//AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	
+	PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("PhysicsHandle"));
 }
 
 void AUERoadmapCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+	
+	AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(UUERoadmap_GA_GravityGun::StaticClass(), 1, 0));
 }
 
 void AUERoadmapCharacter::Tick(float DeltaTime)
@@ -64,6 +68,19 @@ void AUERoadmapCharacter::Tick(float DeltaTime)
 	// cheats checks
 	CheckNoclipCheat();
 	bIsInfiniteAmmoEnabled = ConsoleVars::CVarAmmoCheat.GetValueOnAnyThread();
+
+	if (PhysicsHandle->GrabbedComponent)
+	{
+		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+        const FRotator GrabbedComponentRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+        const FVector GrabbedComponentLocation = PlayerController->PlayerCameraManager->GetCameraLocation() + GrabbedComponentRotation.RotateVector(FVector(200.0, 0.0, 0.0));
+		PhysicsHandle->SetTargetLocationAndRotation(GrabbedComponentLocation, GrabbedComponentRotation);
+	}
+}
+
+UAbilitySystemComponent* AUERoadmapCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -92,7 +109,7 @@ void AUERoadmapCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInputComponent->BindAction(LoadGameAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::LoadGameOnInput);
 
 		// Alternative fire
-		//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AUERoadmapCharacter::ActivateGravityGun);
+		EnhancedInputComponent->BindAction(AlternativeFireAction, ETriggerEvent::Completed, this, &AUERoadmapCharacter::ActivateGravityGun);
 	}
 	else
 	{
@@ -118,7 +135,7 @@ void AUERoadmapCharacter::CheckNoclipCheat()
 bool AUERoadmapCharacter::OnFireTriggered()
 {
 	bool bWasFired = false;
-	if (bIsInfiniteAmmoEnabled || AmmoCount > 0)
+	if (!PhysicsHandle->GrabbedComponent && (bIsInfiniteAmmoEnabled || AmmoCount > 0))
 	{
 		if (!bIsInfiniteAmmoEnabled)
 		{
@@ -127,6 +144,15 @@ bool AUERoadmapCharacter::OnFireTriggered()
 		bWasFired = true;
 	}
 	return bWasFired;
+}
+
+void AUERoadmapCharacter::OnRiflePickedUp()
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag("Weapon.Held"));
+		AbilitySystemComponent->ForceReplication();
+	}
 }
 
 void AUERoadmapCharacter::Move(const FInputActionValue& Value)
@@ -231,10 +257,19 @@ void AUERoadmapCharacter::LoadGameOnInput(const FInputActionValue& Value)
 	}
 }
 
-/*void AUERoadmapCharacter::ActivateGravityGun(const FInputActionValue& Value)
+void AUERoadmapCharacter::ActivateGravityGun(const FInputActionValue& Value)
 {
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->TryActivateAbilityByClass(UUERoadmap_GA_GravityGun::StaticClass());
+		FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromClass(UUERoadmap_GA_GravityGun::StaticClass());
+		if (Spec && Spec->IsActive())
+		{
+			AbilitySystemComponent->CancelAbilityHandle(Spec->Handle);
+		}
+		else
+		{
+			AbilitySystemComponent->TryActivateAbilityByClass(UUERoadmap_GA_GravityGun::StaticClass());
+		}
 	}
-}*/
+}
+

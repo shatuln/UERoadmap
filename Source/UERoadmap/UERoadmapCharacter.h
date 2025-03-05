@@ -8,6 +8,7 @@
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
+#include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "UERoadmapCharacter.generated.h"
 
 class UInputComponent;
@@ -17,6 +18,7 @@ class UInputAction;
 class UInputMappingContext;
 struct FInputActionValue;
 class UAbilitySystemComponent;
+class UPhysicsHandleComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -40,7 +42,7 @@ namespace ConsoleVars
 }
 
 UCLASS(config=Game)
-class AUERoadmapCharacter : public ACharacter//, public IAbilitySystemInterface
+class AUERoadmapCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -80,17 +82,25 @@ class AUERoadmapCharacter : public ACharacter//, public IAbilitySystemInterface
 	
 public:
 	AUERoadmapCharacter();
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	UPhysicsHandleComponent* PhysicsHandle;
 
 protected:
 	virtual void BeginPlay();
 	
 	virtual void Tick(float DeltaTime) override;
 
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
 	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 	TSubclassOf<class AUERoadmapGrenade> GrenadeClass;
 	
 	UPROPERTY(EditAnywhere, Category = Grenade, meta = (AllowPrivateAccess = "true"))
 	class AUERoadmapGrenade* Grenade;
+
+	//UPROPERTY(EditDefaultsOnly, Category = Ability, meta = (AllowPrivateAccess = "true"))
+	//TSubclassOf<class UUERoadmap_GA_GravityGun> GravityGunAbilityClass;
 	
 public:
 		
@@ -100,6 +110,9 @@ public:
 	
 	UFUNCTION()
 	bool OnFireTriggered();
+
+	UFUNCTION()
+	void OnRiflePickedUp();
 
 protected:
 	/** Called for movement input */
@@ -120,8 +133,8 @@ protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
 	
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
-    //TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
+    TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 public:
 	/** Returns Mesh1P subobject **/
