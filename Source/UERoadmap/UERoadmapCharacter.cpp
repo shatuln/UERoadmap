@@ -146,15 +146,6 @@ bool AUERoadmapCharacter::OnFireTriggered()
 	return bWasFired;
 }
 
-void AUERoadmapCharacter::OnRiflePickedUp()
-{
-	if (AbilitySystemComponent)
-	{
-		AbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag("Weapon.Held"));
-		AbilitySystemComponent->ForceReplication();
-	}
-}
-
 void AUERoadmapCharacter::Move(const FInputActionValue& Value)
 {
 	FVector MovementVector = Value.Get<FVector>();
