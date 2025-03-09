@@ -10,7 +10,7 @@ FDynamicStairsPluginEditorModeCommands::FDynamicStairsPluginEditorModeCommands()
 	: TCommands<FDynamicStairsPluginEditorModeCommands>("DynamicStairsPluginEditorMode",
 		NSLOCTEXT("DynamicStairsPluginEditorMode", "DynamicStairsPluginEditorModeCommands", "DynamicStairsPlugin Editor Mode"),
 		NAME_None,
-		FEditorStyle::GetStyleSetName())
+		FAppStyle::GetAppStyleSetName())
 {
 }
 

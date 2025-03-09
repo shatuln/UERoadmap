@@ -2,7 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "InteractiveToolBuilder.h"
+#include "BaseBehaviors/BehaviorTargetInterfaces.h"
 #include "DynamicStairsPluginMyStairsTool.generated.h"
+
+UENUM()
+enum class EStaircaseDirection : uint8
+{
+	Forward,
+	Right,
+	Backward,
+	Left
+};
 
 /**
  * Builder for UDynamicStairsPluginMyStairsToolBuilder
@@ -18,7 +28,7 @@ public:
 };
 
 /**
- * Property set for the UDynamicStairsPluginInteractiveTool
+ * Property set for the UDynamicStairsPluginMyStairsTool
  */
 UCLASS(Transient)
 class DYNAMICSTAIRSPLUGIN_API UDynamicStairsPluginMyStairsToolProperties : public UInteractiveToolPropertySet
@@ -32,25 +42,24 @@ public:
 	UPROPERTY(EditAnywhere, Category = Options)
 	FVector PointToSpawn;
 
-	/** Second point of measurement */
-	//UPROPERTY(EditAnywhere, Category = Options)
-	//FVector EndPoint;
+	UPROPERTY(EditAnywhere, Category = Options, meta=(ClampMin=2))
+	int NumSteps;
 	
-	/** Current distance measurement */
-	//UPROPERTY(EditAnywhere, Category = Options)
-	//double Distance;
+	UPROPERTY(EditAnywhere, Category = Options)
+	FVector StaircaseTop;
 
+	UPROPERTY()
+	TObjectPtr<UDynamicStairsPluginMyStairsTool> MyStairsTool;
+
+	UPROPERTY(EditAnywhere, Category = Options)
+	TArray<EStaircaseDirection> StaircaseDirection;
+	
 	UFUNCTION(CallInEditor)
-	void OnButtonClicked();
+	void SpawnStairs();
 };
 
-/**
- * UDynamicStairsPluginInteractiveTool is an example Tool that allows the user to measure the 
- * distance between two points. The first point is set by click-dragging the mouse, and
- * the second point is set by shift-click-dragging the mouse.
- */
 UCLASS()
-class DYNAMICSTAIRSPLUGIN_API UDynamicStairsPluginMyStairsTool : public UInteractiveTool//, public IClickDragBehaviorTarget
+class DYNAMICSTAIRSPLUGIN_API UDynamicStairsPluginMyStairsTool : public UInteractiveTool, public IClickBehaviorTarget//, public IClickDragBehaviorTarget
 {
 	GENERATED_BODY()
 
@@ -59,19 +68,13 @@ public:
 
 	/** UInteractiveTool overrides */
 	virtual void Setup() override;
-	//virtual void Render(IToolsContextRenderAPI* RenderAPI) override;
-	//virtual void OnPropertyModified(UObject* PropertySet, FProperty* Property) override;
+	virtual void Render(IToolsContextRenderAPI* RenderAPI) override;
 
 	/** IClickDragBehaviorTarget implementation */
-	//virtual FInputRayHit CanBeginClickDragSequence(const FInputDeviceRay& PressPos) override;
-	//virtual void OnClickPress(const FInputDeviceRay& PressPos) override;
-	//virtual void OnClickDrag(const FInputDeviceRay& DragPos) override;
-	// these are not used in this Tool
-	//virtual void OnClickRelease(const FInputDeviceRay& ReleasePos) override {}
-	//virtual void OnTerminateDragSequence() override {}
+	virtual void OnClicked(const FInputDeviceRay& PressPos) override;
+	virtual FInputRayHit IsHitByClick(const FInputDeviceRay& ClickPos) override;
 
-	/** IModifierToggleBehaviorTarget implementation (inherited via IClickDragBehaviorTarget) */
-	//virtual void OnUpdateModifierState(int ModifierID, bool bIsOn) override;
+	void SpawnStairs();
 
 
 protected:
@@ -79,19 +82,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UDynamicStairsPluginMyStairsToolProperties> Properties;
 
-	void SpawnStairs();
-
-
-protected:
 	UWorld* TargetWorld = nullptr;		// target World we will raycast into
-
-	//static const int MoveSecondPointModifierID = 1;		// identifier we associate with the shift key
-	//bool bSecondPointModifierDown = false;				// flag we use to keep track of modifier state
-	//bool bMoveSecondPoint = false;						// flag we use to keep track of which point we are moving during a press-drag
-
-	//FInputRayHit FindRayHit(const FRay& WorldRay, FVector& HitPos);		// raycasts into World
-	//void UpdatePosition(const FRay& WorldRay);					// updates first or second point based on raycast
-	//void UpdateDistance();										// updates distance
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Spawning")
