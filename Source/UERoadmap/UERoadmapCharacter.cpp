@@ -12,6 +12,7 @@
 #include "UERoadmapGameMode.h"
 #include "UERoadmapHUD.h"
 #include "UERoadmapSaveGame.h"
+#include "UERoadmapStreamingManager.h"
 #include "UERoadmap_GA_GravityGun.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -75,6 +76,11 @@ void AUERoadmapCharacter::Tick(float DeltaTime)
         const FRotator GrabbedComponentRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
         const FVector GrabbedComponentLocation = PlayerController->PlayerCameraManager->GetCameraLocation() + GrabbedComponentRotation.RotateVector(FVector(200.0, 0.0, 0.0));
 		PhysicsHandle->SetTargetLocationAndRotation(GrabbedComponentLocation, GrabbedComponentRotation);
+	}
+
+	if (UUERoadmapStreamingManager* StreamingManager = UUERoadmapStreamingManager::Get(this))
+	{
+		StreamingManager->UpdateStreaming(this);
 	}
 }
 
