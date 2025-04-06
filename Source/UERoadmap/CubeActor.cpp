@@ -12,7 +12,9 @@ ACubeActor::ACubeActor()
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	StaticMeshComponent->SetupAttachment(RootComponent);
 
-	HealthPoints = 100;
+	SuperNewHealthPoints = 100;
+
+	bSuppressMaterialChange = false;
 
 	StaticMeshComponent->OnComponentHit.AddDynamic(this, &ACubeActor::OnHit);
 	
@@ -34,10 +36,10 @@ float ACubeActor::TakeDamage(float Damage, FDamageEvent const& DamageEvent, ACon
 
 	if (!bIsImmortal)
 	{
-		HealthPoints -= actualDamage;
+		SuperNewHealthPoints -= actualDamage;
 		IsDead();
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Taken damage " + FString::FromInt(actualDamage) + ", health: " + FString::FromInt(HealthPoints)));
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Taken damage " + FString::FromInt(actualDamage) + ", health: " + FString::FromInt(SuperNewHealthPoints)));
 	return actualDamage;
 }
 
@@ -59,10 +61,10 @@ void ACubeActor::Tick(float DeltaTime)
 bool ACubeActor::IsDead()
 {
 	bool isDead = false;
-	if (HealthPoints <= 0)
+	if (SuperNewHealthPoints <= 0)
 	{
 		isDead = true;
-		Destroy();
+		//Destroy();
 	}
 	return isDead;
 }
@@ -129,15 +131,15 @@ void ACubeActor::SetCubeState()
 	{
 		State = Immortal;
 	}
-	else if (HealthPoints == 100)
+	else if (SuperNewHealthPoints == 100)
 	{
 		State = FullHP;
 	}
-	else if (HealthPoints >= 50)
+	else if (SuperNewHealthPoints >= 50)
 	{
 		State = HalfHP;
 	}
-	else if (HealthPoints < 50)
+	else if (SuperNewHealthPoints < 50)
 	{
 		State = LowHP;
 	}
@@ -151,13 +153,13 @@ void ACubeActor::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimit
 		AUERoadmapProjectile* Projectile = Cast<AUERoadmapProjectile>(OtherActor);
 		if (Projectile != nullptr && OtherActor != nullptr && OtherActor != this)
 		{
-			HealthPoints -= 10;
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Hitted " + FString::FromInt(HealthPoints)));
+			SuperNewHealthPoints -= 10;
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Hitted " + FString::FromInt(SuperNewHealthPoints)));
 			if (!IsDead())
 			{
 				CubeState CurrentState = State;
 				SetCubeState();
-				if (CurrentState != State)
+				if (!bSuppressMaterialChange && CurrentState != State)
 				{
 					LoadDataTable();
 				}

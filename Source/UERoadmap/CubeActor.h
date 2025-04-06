@@ -35,11 +35,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Switch Components")
 	class UStaticMeshComponent* StaticMeshComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Health", meta=(ClampMin=1, ClampMax=100, EditCondition="!bIsImmortal"), SaveGame)
-	int32 HealthPoints;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health", meta=(ClampMin=1, ClampMax=100, EditCondition="!bIsImmortal"), SaveGame)
+	int32 SuperNewHealthPoints;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health")
 	bool bIsImmortal;
+
+	UPROPERTY(EditAnywhere, Category = "Misc")
+	bool bSuppressMaterialChange;
 
 	UPROPERTY(VisibleAnywhere, Category = "Visual", SaveGame)
 	FString CubeMaterial;
