@@ -75,10 +75,6 @@ class AUERoadmapCharacter : public ACharacter, public IAbilitySystemInterface
 	/** Alternative fire Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* AlternativeFireAction;
-
-	/** Ammo count */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo, SaveGame, meta = (AllowPrivateAccess = "true"))
-	int32 AmmoCount;
 	
 public:
 	AUERoadmapCharacter();
@@ -98,6 +94,12 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = Grenade, meta = (AllowPrivateAccess = "true"))
 	class AUERoadmapGrenade* Grenade;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayEffect")
+	TSubclassOf<UGameplayEffect> AmmoModifierGameplayEffectClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayEffect")
+	TSubclassOf<UGameplayEffect> AmmoAddGameplayEffectClass;
 
 	//UPROPERTY(EditDefaultsOnly, Category = Ability, meta = (AllowPrivateAccess = "true"))
 	//TSubclassOf<class UUERoadmap_GA_GravityGun> GravityGunAbilityClass;

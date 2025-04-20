@@ -13,6 +13,7 @@
 #include "UERoadmapHUD.h"
 #include "UERoadmapSaveGame.h"
 #include "UERoadmapStreamingManager.h"
+#include "UERoadmap_Ammo_AttributeSet.h"
 #include "UERoadmap_GA_GravityGun.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -55,6 +56,7 @@ void AUERoadmapCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(UUERoadmap_GA_GravityGun::StaticClass(), 1, 0));
+	AbilitySystemComponent->AddAttributeSetSubobject(NewObject<UUERoadmap_Ammo_AttributeSet>(this));
 }
 
 void AUERoadmapCharacter::Tick(float DeltaTime)
@@ -141,11 +143,17 @@ void AUERoadmapCharacter::CheckNoclipCheat()
 bool AUERoadmapCharacter::OnFireTriggered()
 {
 	bool bWasFired = false;
-	if (!PhysicsHandle->GrabbedComponent && (bIsInfiniteAmmoEnabled || AmmoCount > 0))
+	const FGameplayAttribute& GASAmmo = UUERoadmap_Ammo_AttributeSet::GetAmmoAttribute();
+	if (!PhysicsHandle->GrabbedComponent && (bIsInfiniteAmmoEnabled || AbilitySystemComponent->GetNumericAttributeChecked(GASAmmo) > 0))
 	{
 		if (!bIsInfiniteAmmoEnabled)
 		{
-			AmmoCount--;
+			if (AmmoModifierGameplayEffectClass)
+			{
+				FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(AmmoModifierGameplayEffectClass, 1.0f, AbilitySystemComponent->MakeEffectContext());
+				AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*Spec.Data, AbilitySystemComponent);
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Current GAS ammo: " + FString::SanitizeFloat(AbilitySystemComponent->GetNumericAttributeChecked(GASAmmo))));
+			}
 		}
 		bWasFired = true;
 	}
@@ -218,7 +226,6 @@ void AUERoadmapCharacter::SaveGameOnInput(const FInputActionValue& Value)
 	{
 		SaveGameInstance->PlayerLocation = GetActorLocation();
 		SaveGameInstance->PlayerRotation = GetActorRotation();
-		SaveGameInstance->PlayerAmmoCount = AmmoCount;
 
 		AUERoadmapGameMode* GameMode = Cast<AUERoadmapGameMode>(GetWorld()->GetAuthGameMode());
 		GameMode->SaveGameInGameMode(SaveGameInstance);
@@ -235,7 +242,6 @@ void AUERoadmapCharacter::LoadGameOnInput(const FInputActionValue& Value)
 
 	if (LoadGameInstance)
 	{
-		AmmoCount = LoadGameInstance->PlayerAmmoCount;
 		SetActorLocation(LoadGameInstance->PlayerLocation);
 		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		if (PC)

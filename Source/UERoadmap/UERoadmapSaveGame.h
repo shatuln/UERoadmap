@@ -68,9 +68,6 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	FRotator PlayerRotation;
 
-	UPROPERTY(VisibleAnywhere)
-	int PlayerAmmoCount;
-
 	UPROPERTY()
 	TMap<FString, FActorSaveData> SavedActors;
 	
