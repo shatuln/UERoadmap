@@ -15,6 +15,7 @@
 #include "UERoadmapStreamingManager.h"
 #include "UERoadmap_Ammo_AttributeSet.h"
 #include "UERoadmap_GA_GravityGun.h"
+#include "UERoadmap_GE_GravityGunActivated.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -83,6 +84,13 @@ void AUERoadmapCharacter::Tick(float DeltaTime)
 	if (UUERoadmapStreamingManager* StreamingManager = UUERoadmapStreamingManager::Get(this))
 	{
 		StreamingManager->UpdateStreaming(this);
+	}
+
+	if (GravityGunEnergyGameplayEffect.IsValid())
+	{
+		float GravityGunEnergyVal = AbilitySystemComponent->GetNumericAttribute(UUERoadmap_Ammo_AttributeSet::GetGravityGunEnergyAttribute());
+		FString DebugText = FString::Printf(TEXT("GravityGunEnergy: %.0f"), GravityGunEnergyVal);
+		GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Green, DebugText);
 	}
 }
 
@@ -268,10 +276,19 @@ void AUERoadmapCharacter::ActivateGravityGun(const FInputActionValue& Value)
 		if (Spec && Spec->IsActive())
 		{
 			AbilitySystemComponent->CancelAbilityHandle(Spec->Handle);
+			if (GravityGunEnergyGameplayEffect.IsValid())
+			{
+				AbilitySystemComponent->RemoveActiveGameplayEffect(GravityGunEnergyGameplayEffect);
+				AbilitySystemComponent->SetNumericAttributeBase(UUERoadmap_Ammo_AttributeSet::GetGravityGunEnergyAttribute(), 1.0f);
+				GravityGunEnergyGameplayEffect.Invalidate();
+			}
 		}
 		else
 		{
-			AbilitySystemComponent->TryActivateAbilityByClass(UUERoadmap_GA_GravityGun::StaticClass());
+			if (AbilitySystemComponent->TryActivateAbilityByClass(UUERoadmap_GA_GravityGun::StaticClass()))
+			{
+				GravityGunEnergyGameplayEffect = AbilitySystemComponent->ApplyGameplayEffectToSelf(UUERoadmap_GE_GravityGunActivated::StaticClass()->GetDefaultObject<UGameplayEffect>(), 1.0f, AbilitySystemComponent->MakeEffectContext());
+			}
 		}
 	}
 }

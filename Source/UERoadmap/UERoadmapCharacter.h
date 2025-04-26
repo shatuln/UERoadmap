@@ -148,5 +148,7 @@ private:
 	bool bIsInfiniteAmmoEnabled = false;
 
 	void CheckNoclipCheat();
+
+	FActiveGameplayEffectHandle GravityGunEnergyGameplayEffect;
 };
 

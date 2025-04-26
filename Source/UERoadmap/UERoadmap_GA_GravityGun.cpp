@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "UERoadmapCharacter.h"
+#include "UERoadmap_Ammo_AttributeSet.h"
 #include "Kismet/KismetMathLibrary.h"
 
 UUERoadmap_GA_GravityGun::UUERoadmap_GA_GravityGun()
@@ -87,7 +88,9 @@ void UUERoadmap_GA_GravityGun::ThrowObject()
 		{
 			OwnerCharacter->PhysicsHandle->ReleaseComponent();
 			HeldActor = nullptr;
-			TargetComponent->AddImpulse(UKismetMathLibrary::GetForwardVector(OwnerCharacter->GetControlRotation()) * ThrowForce, NAME_None, true);
+			UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+			float EnergyModifier = ASC->GetNumericAttribute(UUERoadmap_Ammo_AttributeSet::GetGravityGunEnergyAttribute());
+			TargetComponent->AddImpulse(UKismetMathLibrary::GetForwardVector(OwnerCharacter->GetControlRotation()) * ThrowForce * EnergyModifier, NAME_None, true);
 		}
 	}
 }

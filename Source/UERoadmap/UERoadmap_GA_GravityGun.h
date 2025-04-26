@@ -44,5 +44,5 @@ private:
 	float MaxPickupDistance = 500.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Gravity Gun")
-	float ThrowForce = 2000.0f;
+	float ThrowForce = 20.0f;
 };

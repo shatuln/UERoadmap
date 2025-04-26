@@ -20,11 +20,17 @@ UCLASS()
 class UEROADMAP_API UUERoadmap_Ammo_AttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
+
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	
 public:
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Ammo", SaveGame)
-	FGameplayAttributeData Ammo;
+	FGameplayAttributeData Ammo = 0.0f;
 	ATTRIBUTE_ACCESSORS(UUERoadmap_Ammo_AttributeSet, Ammo);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Ammo")
+	FGameplayAttributeData GravityGunEnergy = 1.0f;
+	ATTRIBUTE_ACCESSORS(UUERoadmap_Ammo_AttributeSet, GravityGunEnergy);
 	
 };
