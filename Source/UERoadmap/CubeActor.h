@@ -3,8 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemInterface.h"
+#include "AbilitySystemComponent.h"
+#include "ActiveGameplayEffectHandle.h"
 #include "GameFramework/Actor.h"
 #include "CubeActor.generated.h"
+
+class UAbilitySystemComponent;
 
 USTRUCT(BlueprintType)
 struct FCubeActorData : public FTableRowBase
@@ -26,7 +31,7 @@ struct FCubeActorData : public FTableRowBase
 	};
 
 UCLASS()
-class UEROADMAP_API ACubeActor : public AActor
+class UEROADMAP_API ACubeActor : public AActor, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
@@ -61,6 +66,17 @@ protected:
 	
 	virtual void OnConstruction(const FTransform& Transform) override;
 
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayEffect")
+	TSubclassOf<UGameplayEffect> HealthRegenGameplayEffectClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayEffect")
+	TSubclassOf<UGameplayEffect> HealthHitGameplayEffectClass;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -83,4 +99,6 @@ private:
 
 	FTransform DefaultTransform;
 	CubeState State;
+
+	FActiveGameplayEffectHandle HealthRegenGameplayEffectHandle;
 };

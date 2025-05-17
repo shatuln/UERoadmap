@@ -3,7 +3,10 @@
 
 #include "CubeActor.h"
 
+#include "AbilitySystemComponent.h"
+#include "GameplayEffectTypes.h"
 #include "UERoadmapProjectile.h"
+#include "UERoadmap_Health_AttributeSet.h"
 
 // Sets default values
 ACubeActor::ACubeActor()
@@ -17,9 +20,11 @@ ACubeActor::ACubeActor()
 	bSuppressMaterialChange = false;
 
 	StaticMeshComponent->OnComponentHit.AddDynamic(this, &ACubeActor::OnHit);
+
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	//PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true;
 
 }
 
@@ -27,6 +32,9 @@ ACubeActor::ACubeActor()
 void ACubeActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AbilitySystemComponent->AddAttributeSetSubobject(NewObject<UUERoadmap_Health_AttributeSet>(this));
+	AbilitySystemComponent->SetNumericAttributeBase(UUERoadmap_Health_AttributeSet::GetHealthAttribute(), SuperNewHealthPoints);
 }
 
 float ACubeActor::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator,
@@ -36,7 +44,11 @@ float ACubeActor::TakeDamage(float Damage, FDamageEvent const& DamageEvent, ACon
 
 	if (!bIsImmortal)
 	{
-		SuperNewHealthPoints -= actualDamage;
+		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(HealthHitGameplayEffectClass, 1.0f, AbilitySystemComponent->MakeEffectContext());
+		Spec.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("SetByCaller.HealthHit")), -actualDamage);
+		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*Spec.Data, AbilitySystemComponent);
+			
+		AbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("State.Injured")));
 		IsDead();
 	}
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Taken damage " + FString::FromInt(actualDamage) + ", health: " + FString::FromInt(SuperNewHealthPoints)));
@@ -51,17 +63,35 @@ void ACubeActor::OnConstruction(const FTransform& Transform)
 	LoadDataTable();
 }
 
+UAbilitySystemComponent* ACubeActor::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
 // Called every frame
 void ACubeActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (HealthRegenGameplayEffectHandle.IsValid())
+	{
+		const float HealthVal = AbilitySystemComponent->GetNumericAttribute(UUERoadmap_Health_AttributeSet::GetHealthAttribute());
+		FString DebugText = FString::Printf(TEXT("Cube health regen: %.0f"), HealthVal);
+		GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Green, DebugText);
+		
+		if (!AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("State.Injured"))))
+		{
+			AbilitySystemComponent->RemoveActiveGameplayEffect(HealthRegenGameplayEffectHandle);
+			HealthRegenGameplayEffectHandle.Invalidate();
+		}
+	}
 
 }
 
 bool ACubeActor::IsDead()
 {
 	bool isDead = false;
-	if (SuperNewHealthPoints <= 0)
+	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("State.Dead"))))
 	{
 		isDead = true;
 		//Destroy();
@@ -127,19 +157,29 @@ void ACubeActor::LoadDataTable()
 
 void ACubeActor::SetCubeState()
 {
+	float HealthVal = 0.0f;
+	if (GIsEditor && !GetWorld()->IsGameWorld())
+	{
+		HealthVal = SuperNewHealthPoints;
+	}
+	else
+	{
+		HealthVal = AbilitySystemComponent->GetNumericAttribute(UUERoadmap_Health_AttributeSet::GetHealthAttribute());
+	}
+	
 	if (bIsImmortal)
 	{
 		State = Immortal;
 	}
-	else if (SuperNewHealthPoints == 100)
+	else if (HealthVal == 100)
 	{
 		State = FullHP;
 	}
-	else if (SuperNewHealthPoints >= 50)
+	else if (HealthVal >= 50)
 	{
 		State = HalfHP;
 	}
-	else if (SuperNewHealthPoints < 50)
+	else if (HealthVal < 50)
 	{
 		State = LowHP;
 	}
@@ -153,8 +193,19 @@ void ACubeActor::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimit
 		AUERoadmapProjectile* Projectile = Cast<AUERoadmapProjectile>(OtherActor);
 		if (Projectile != nullptr && OtherActor != nullptr && OtherActor != this)
 		{
-			SuperNewHealthPoints -= 10;
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Hitted " + FString::FromInt(SuperNewHealthPoints)));
+			if (!HealthRegenGameplayEffectHandle.IsValid())
+			{
+				FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(HealthRegenGameplayEffectClass, 1.0f, AbilitySystemComponent->MakeEffectContext());
+				HealthRegenGameplayEffectHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*Spec.Data, AbilitySystemComponent);
+			}
+			
+			FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(HealthHitGameplayEffectClass, 1.0f, AbilitySystemComponent->MakeEffectContext());
+			Spec.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("SetByCaller.HealthHit")), -20.0f);
+			AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*Spec.Data, AbilitySystemComponent);
+			
+			AbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("State.Injured")));
+			
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Hitted " + FString::FromInt(AbilitySystemComponent->GetNumericAttribute(UUERoadmap_Health_AttributeSet::GetHealthAttribute()))));
 			if (!IsDead())
 			{
 				CubeState CurrentState = State;

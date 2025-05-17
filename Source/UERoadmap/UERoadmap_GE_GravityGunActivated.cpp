@@ -11,7 +11,7 @@ UUERoadmap_GE_GravityGunActivated::UUERoadmap_GE_GravityGunActivated()
 	Period.Value = 0.1f;
 
 	FGameplayModifierInfo ModifierInfo;
-	static FProperty* EnergyProperty = FindFieldChecked<FProperty>(UUERoadmap_Ammo_AttributeSet::StaticClass(), GET_MEMBER_NAME_CHECKED(UUERoadmap_Ammo_AttributeSet, GravityGunEnergy));
+	FProperty* EnergyProperty = FindFieldChecked<FProperty>(UUERoadmap_Ammo_AttributeSet::StaticClass(), GET_MEMBER_NAME_CHECKED(UUERoadmap_Ammo_AttributeSet, GravityGunEnergy));
 	ModifierInfo.Attribute = FGameplayAttribute(EnergyProperty);
 	ModifierInfo.ModifierOp = EGameplayModOp::Additive;
 	ModifierInfo.ModifierMagnitude = FGameplayEffectModifierMagnitude(FScalableFloat(1.5f));
