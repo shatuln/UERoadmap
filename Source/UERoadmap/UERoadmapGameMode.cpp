@@ -8,6 +8,9 @@
 #include "UERoadmapSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
+#include "OnlineSubsystem.h"
+#include "Interfaces/OnlineFriendsInterface.h"
+#include "Interfaces/OnlineIdentityInterface.h"
 #include "UObject/ConstructorHelpers.h"
 
 AUERoadmapGameMode::AUERoadmapGameMode()
@@ -24,7 +27,8 @@ void AUERoadmapGameMode::BeginPlay()
 	Super::BeginPlay();
 
 	//TODO: Commented till buttons work
-	
+
+	GetSteamFriendsList();
 	//APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	//AUERoadmapHUD* HUD = PC->GetHUD<AUERoadmapHUD>();
 	//HUD->ShowMainMenu();
@@ -180,5 +184,33 @@ void AUERoadmapGameMode::ClearSavedActors()
 			UE_LOG(LogTemp, Log, TEXT("Destroying actor: %s"), *Actor->GetName());
 			Actor->Destroy();
 		}
+	}
+}
+
+void AUERoadmapGameMode::GetSteamFriendsList()
+{
+	SteamFriendsList.Push(TEXT("FriendsListFirstItem"));
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(STEAM_SUBSYSTEM); // or nullptr for default
+	if (!Subsystem) return;
+
+	IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
+	IOnlineFriendsPtr Friends = Subsystem->GetFriendsInterface();
+
+	if (!Identity.IsValid() || !Friends.IsValid()) return;
+
+	TSharedPtr<const FUniqueNetId> UserId = Identity->GetUniquePlayerId(0);
+	if (!UserId.IsValid()) return;
+	
+	TArray<TSharedRef<FOnlineFriend>> FriendList;
+	Friends->GetFriendsList(0, TEXT("FriendList"), FriendList);
+
+	SteamFriendsList.Push(Identity->GetPlayerNickname(0));
+	for (const TSharedRef<FOnlineFriend>& Friend : FriendList)
+	{
+		FString Name = Friend->GetDisplayName();
+		FString Status = TEXT("Online/NotOnline");
+		UE_LOG(LogTemp, Log, TEXT("Friend: %s (%s)"), *Name, *Status);
+
+		SteamFriendsList.Push(Name);
 	}
 }

@@ -19,10 +19,15 @@ public:
 
 	void SaveGameInGameMode(UUERoadmapSaveGame* SaveGameInstance);
 	void LoadGameInGameMode(UUERoadmapSaveGame* LoadGameInstance);
+
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FString> SteamFriendsList;
 	
 private:
 	AActor* FindActorByName(const FString& ActorName) const;
 	void ClearSavedActors();
+
+	void GetSteamFriendsList();
 };
 
 
