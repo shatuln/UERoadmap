@@ -13,6 +13,11 @@
 				"GameplayAbilities",
 				"CoreUObject"
 			]
+		},
+		{
+			"Name": "UERoadmapShapeModule",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
@@ -29,6 +34,10 @@
 		},
 		{
 			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
+			"Name": "GeometryProcessing",
 			"Enabled": true
 		},
 		{
