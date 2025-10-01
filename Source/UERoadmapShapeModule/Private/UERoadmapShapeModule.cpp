@@ -49,7 +49,7 @@ void FUERoadmapShapeModule::OnCreateCube()
 {
 	UE::Geometry::FMinimalBoxMeshGenerator MinimalBoxMeshGenerator;
 	MinimalBoxMeshGenerator.Box = UE::Geometry::FOrientedBox3d(
-            FVector3d(GetPointInFrontOfEditorCamera()),
+            FVector3d(0,0, 0),
             FVector3d(50, 50, 50)
         );
     
@@ -74,11 +74,6 @@ void FUERoadmapShapeModule::OnCreateSphere()
 	SphereGenerator.Generate();
 	FDynamicMesh3 Mesh(&SphereGenerator);
 
-	for (int vid : Mesh.VertexIndicesItr())
-	{
-		Mesh.SetVertex(vid, Mesh.GetVertex(vid) + FVector3d(GetPointInFrontOfEditorCamera()));
-	}
-
 	UDynamicMeshComponent* MeshComp = GetDynamicMeshComponent();
 	if (MeshComp)
 	{
@@ -90,29 +85,34 @@ void FUERoadmapShapeModule::OnCreateSphere()
 UDynamicMeshComponent* FUERoadmapShapeModule::GetDynamicMeshComponent()
 {
 	UDynamicMeshComponent* MeshComp = nullptr;
-	if(UWorld* World = GEditor->GetEditorWorldContext().World())
+	UWorld* World = GEditor->GetEditorWorldContext().World();
+	if (World)
 	{
+		const std::pair<FVector, FRotator> SpawnPoint = GetPointInFrontOfEditorCamera();
 		AActor* Actor = World->SpawnActor<AActor>();
 		MeshComp = NewObject<UDynamicMeshComponent>(Actor);
 		MeshComp->RegisterComponent();
 		Actor->SetRootComponent(MeshComp);
+		Actor->SetActorLocation(SpawnPoint.first + SpawnPoint.second.RotateVector(FVector(100.0, 0.0, 0.0)));
 	}
 	return MeshComp;
 }
 
-FVector FUERoadmapShapeModule::GetPointInFrontOfEditorCamera()
+TPair<FVector, FRotator> FUERoadmapShapeModule::GetPointInFrontOfEditorCamera()
 {
     if (GEditor == nullptr)
-        return FVector::ZeroVector;
+    {
+    	return TPair<FVector, FRotator>(FVector::ZeroVector, FRotator::ZeroRotator);
+    }
 
     FEditorViewportClient* ViewportClient = static_cast<FEditorViewportClient*>(GEditor->GetActiveViewport()->GetClient());
     if (ViewportClient == nullptr)
-        return FVector::ZeroVector;
+    {
+    	return TPair<FVector, FRotator>(FVector::ZeroVector, FRotator::ZeroRotator);
+    }
 	
     const FVector CamLoc = ViewportClient->GetViewLocation();
     const FRotator CamRot = ViewportClient->GetViewRotation();
 	
-    const FVector Forward = CamRot.Vector();
-	
-    return CamLoc + Forward * 500.0f;
+    return TPair<FVector, FRotator>(CamLoc, CamRot);
 }

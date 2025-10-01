@@ -14,5 +14,5 @@ private:
 	void OnCreateCube();
 	void OnCreateSphere();
 	UDynamicMeshComponent* GetDynamicMeshComponent();
-	FVector GetPointInFrontOfEditorCamera();
+	TPair<FVector, FRotator> GetPointInFrontOfEditorCamera();
 };
