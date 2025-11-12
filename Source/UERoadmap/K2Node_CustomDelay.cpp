@@ -63,3 +63,5 @@ void UK2Node_CustomDelay::WaitForKey(const UObject* WorldContextObject, FLatentA
 		}
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

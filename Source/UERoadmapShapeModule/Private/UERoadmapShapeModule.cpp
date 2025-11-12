@@ -88,12 +88,12 @@ UDynamicMeshComponent* FUERoadmapShapeModule::GetDynamicMeshComponent()
 	UWorld* World = GEditor->GetEditorWorldContext().World();
 	if (World)
 	{
-		const std::pair<FVector, FRotator> SpawnPoint = GetPointInFrontOfEditorCamera();
+		const TPair<FVector, FRotator> SpawnPoint = GetPointInFrontOfEditorCamera();
 		AActor* Actor = World->SpawnActor<AActor>();
 		MeshComp = NewObject<UDynamicMeshComponent>(Actor);
 		MeshComp->RegisterComponent();
 		Actor->SetRootComponent(MeshComp);
-		Actor->SetActorLocation(SpawnPoint.first + SpawnPoint.second.RotateVector(FVector(100.0, 0.0, 0.0)));
+		Actor->SetActorLocation(SpawnPoint.Get<FVector>() + SpawnPoint.Get<FRotator>().RotateVector(FVector(100.0, 0.0, 0.0)));
 	}
 	return MeshComp;
 }
