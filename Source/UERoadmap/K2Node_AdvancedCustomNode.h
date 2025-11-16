@@ -20,6 +20,7 @@ class UEROADMAP_API UK2Node_AdvancedCustomNode : public UK2Node
 	virtual void ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
 	virtual void PinDefaultValueChanged(UEdGraphPin* Pin) override;
 	virtual void NotifyPinConnectionListChanged(UEdGraphPin* Pin) override;
+	virtual void PostReconstructNode() override;
 
 	UFUNCTION(BlueprintCallable, CustomThunk, meta=(SetParam="OutValue"), Category="Reflection")
 	static void GetProperty(UObject* Target, FName PropertyName, int32& OutValue);
@@ -45,7 +46,7 @@ class UEROADMAP_API UK2Node_AdvancedCustomNode : public UK2Node
 				void* SrcPtr = Prop->ContainerPtrToValuePtr<void>(Target);
 				if (SrcPtr)
 				{
-					Prop->CopyCompleteValue(OutValueAddr, SrcPtr);
+					Prop->CopyCompleteValueFromScriptVM(OutValueAddr, SrcPtr);
 				}
 			}
 		}
@@ -62,8 +63,7 @@ private:
 
 	FProperty* TargetProperty = nullptr;
 
-	void AnalizePins(UEdGraphPin* Pin);
+	void AnalyzePins(UEdGraphPin* Pin);
 	void AnalyzeAndSetOutputPinType();
-	void* SetOutputBoolValue();
 	
 };
