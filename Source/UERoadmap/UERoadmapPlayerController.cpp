@@ -12,7 +12,7 @@ void AUERoadmapPlayerController::ToggleMenu()
 {
 	AUERoadmapHUD* HUD = GetHUD<AUERoadmapHUD>();
 
-	if (HUD != nullptr)
+	if (HUD != nullptr && IsLocalController())
 	{
 		if (!bIsMenuToggled)
 		{
